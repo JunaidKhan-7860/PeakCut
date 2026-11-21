@@ -108,7 +108,8 @@ _lock = threading.RLock()
 on_clip_ready: list = []   # callbacks (job, clip), run once when a clip first finishes
 
 DEFAULTS = {"max_clips": 6, "min_len": 15, "max_len": 60, "style": "bounce", "layout": "blur", "quality": 720,
-            "range_start": None, "range_end": None, "captions": True}
+            "range_start": None, "range_end": None, "captions": True, "music": "none", "music_vol": 0.18, "corner_tag": "",
+            "progress_bar": True, "punch_zoom": True, "teaser_hook": False, "teaser_text": "WAIT FOR IT... 👀", "teaser_dur": 2.2}
 
 
 LIMITS = {"max_clips": (1, 20), "min_len": (5, 120), "max_len": (10, 180), "quality": (360, 1080)}
@@ -118,9 +119,9 @@ def clean_options(options) -> dict:
     """Only known settings, each inside its allowed range. Raises ValueError on nonsense."""
     out = {}
     for k, v in (options if isinstance(options, dict) else {}).items():
-        if k == "captions":
+        if k in ("captions", "progress_bar", "punch_zoom", "teaser_hook"):
             if not isinstance(v, bool):
-                raise ValueError("Captions must be on or off.")
+                raise ValueError(f"{k} must be on or off.")
             out[k] = v
             continue
         if k not in DEFAULTS or v in ("", None):
@@ -132,6 +133,15 @@ def clean_options(options) -> dict:
             v = v if v in render.STYLES else DEFAULTS["style"]
         elif k == "layout":
             v = v if v in render.LAYOUTS else DEFAULTS["layout"]
+        elif k in ("music", "corner_tag", "teaser_text"):
+            out[k] = str(v)[:60]
+            continue
+        elif k == "teaser_dur":
+            try:
+                out[k] = max(1.0, min(5.0, float(v)))
+            except (ValueError, TypeError):
+                out[k] = 2.2
+            continue
         else:                                    # range_start, range_end: seconds into the video
             v = float(v)
             if not math.isfinite(v) or v < 0:
@@ -153,7 +163,30 @@ def public(job) -> dict:
     """What the browser may see: no server paths, no owner id."""
     out = {k: v for k, v in job.items() if k not in HIDDEN}
     out["source"] = {k: v for k, v in job["source"].items() if k != "path"}
-    out["clips"] = [{k: v for k, v in c.items() if k not in ("src", "fixed_words", "fixed_for")} for c in job["clips"]]
+    
+    # Preload words if available for words_text
+    all_words = None
+    if any(not c.get("fixed_words") for c in job.get("clips", [])):
+        wf = Path(job.get("dir", "")) / "words.json"
+        if wf.exists():
+            try:
+                all_words = json.loads(wf.read_text(encoding="utf-8"))
+            except Exception:
+                all_words = None
+
+    clips_out = []
+    for c in job.get("clips", []):
+        cd = {k: v for k, v in c.items() if k not in ("src", "fixed_words", "fixed_for")}
+        if c.get("fixed_words"):
+            cd["words_text"] = " ".join(w.get("w", "") for w in c["fixed_words"])
+        elif all_words:
+            span_words = [w.get("w", "") for w in all_words if c.get("start", 0) - 0.5 <= w.get("s", 0) <= c.get("end", 0) + 0.5]
+            cd["words_text"] = " ".join(span_words)
+        else:
+            cd["words_text"] = ""
+        clips_out.append(cd)
+
+    out["clips"] = clips_out
     ai = job.get("ai") or {}
     out["ai"] = {"tokens": ai.get("tokens", 0), "note": ai.get("note", ""), "used": bool(ai.get("model"))}   # never the model, never raw errors
     if job.get("status") == "queued":
@@ -288,7 +321,7 @@ def create(source: dict, options: dict, enqueue=True, creator=None, kind="video"
     c = creators.get(creator) if creator else None
     if c:
         d = creators.root(c["id"]) / ("live" if kind == "live" else "videos") / jid
-        base = {**DEFAULTS, **{k: c[k] for k in ("max_clips", "min_len", "max_len", "style", "layout", "captions")}}
+        base = {**DEFAULTS, **{k: c[k] for k in ("max_clips", "min_len", "max_len", "style", "layout", "captions", "music", "music_vol", "corner_tag") if k in c}}
     else:
         d, base, creator = config.user_dir(ctx.uid()) / "jobs" / jid, dict(DEFAULTS), None
     opts = {**base, **clean_options(options)}
@@ -358,13 +391,55 @@ def request_render(jid, cid, changes: dict):
         raise ValueError("Those times aren't valid.")
     if not 3 <= new["end"] - new["start"] <= 180:
         raise ValueError("A clip can be 3 to 180 seconds long.")
-    for k in ("hook", "title", "description", "style", "layout"):
+    for k in ("hook", "hook_theme", "title", "description", "style", "layout", "music", "corner_tag"):
         if k in changes:
-            new[k] = str(changes[k])[:{"hook": 60, "title": 100, "description": 2000}.get(k, 20)]
+            new[k] = str(changes[k])[:{"hook": 60, "hook_theme": 30, "title": 100, "description": 2000, "corner_tag": 60}.get(k, 30)]
+    if "progress_bar" in changes:
+        new["progress_bar"] = bool(changes["progress_bar"])
+    if "punch_zoom" in changes:
+        new["punch_zoom"] = bool(changes["punch_zoom"])
+    if "music_vol" in changes:
+        try:
+            new["music_vol"] = max(0.01, min(0.80, float(changes["music_vol"])))
+        except (ValueError, TypeError):
+            pass
+    if "teaser_hook" in changes:
+        new["teaser_hook"] = bool(changes["teaser_hook"])
+    if "teaser_text" in changes:
+        new["teaser_text"] = str(changes["teaser_text"])[:60]
+    if "teaser_dur" in changes:
+        try:
+            new["teaser_dur"] = max(1.0, min(5.0, float(changes["teaser_dur"])))
+        except (ValueError, TypeError):
+            new["teaser_dur"] = 2.2
+    if "teaser_start" in changes and changes["teaser_start"] is not None:
+        try:
+            new["teaser_start"] = max(0.0, float(changes["teaser_start"]))
+        except (ValueError, TypeError):
+            pass
+    if "hook_video" in changes:
+        new["hook_video"] = str(changes["hook_video"]) if changes["hook_video"] else None
     if new.get("style") not in render.STYLES:
         new["style"] = DEFAULTS["style"]
     if new.get("layout") not in render.LAYOUTS:
         new["layout"] = DEFAULTS["layout"]
+    if "words_text" in changes and isinstance(changes["words_text"], str):
+        w_text = changes["words_text"].strip()
+        if w_text:
+            w_list = w_text.split()
+            s_time = new["start"]
+            e_time = new["end"]
+            dur = max(0.1, e_time - s_time)
+            step = dur / len(w_list)
+            new_fixed = []
+            for i, word in enumerate(w_list):
+                new_fixed.append({
+                    "w": word,
+                    "s": round(s_time + i * step, 2),
+                    "e": round(s_time + (i + 0.85) * step, 2)
+                })
+            new["fixed_words"] = new_fixed
+            new["fixed_for"] = [round(new["start"], 2), round(new["end"], 2), "en2"]
     clip.update(new, status="queued")
     save(job)
     _q.put(("clip", jid, cid))
@@ -381,6 +456,10 @@ def render_one(job, clip, words):
         src = Path(clip["src"]) if clip.get("src") else Path(job["source_path"])
         if not clip.get("src"):
             clip["end"] = min(clip["end"], job["duration"])
+        if not clip.get("corner_tag") and job.get("creator"):
+            c_data = creators.get(job["creator"])
+            if c_data and c_data.get("corner_tag"):
+                clip["corner_tag"] = c_data["corner_tag"]
         local = dict(clip, start=clip["start"] - off, end=clip["end"] - off, hook=roman.to_roman(clip.get("hook") or ""))
         near = _caption_words(job, clip, words, off) if clip.get("captions", True) else []
         out = render.render_clip(src, d / "clips", clip["id"], local, near, job["width"], job["height"])
@@ -591,7 +670,7 @@ def _run_job(job):
             _set(job, thumb=True)
         usage.set_context(job["creator"], meta["title"])
         span = (o["range_end"] or meta["duration"]) - (o["range_start"] or 0)
-        pieces = span > LONG_VIDEO or meta["duration"] <= 0
+        pieces = meta["duration"] > 15 * 60 or span > 15 * 60 or meta["duration"] <= 0
         if not pieces:  # shorter video: fetch all of it in the background while the audio is worked on
             video = fetch.submit(media.download, src["url"], d, int(o["quality"]))
         audio_file = media.download_audio(src["url"], d, lambda p: _set(job, progress=0.03 + 0.1 * p))
@@ -756,7 +835,11 @@ def _run_job(job):
         for c in found:
             c.update(id=f"clip{len(job['clips']) + 1:02d}", start=round(c["start"] + shift, 2),
                      end=round(c["end"] + shift, 2), style=o["style"], layout=o["layout"],
-                     captions=o.get("captions", True), status="queued", version=0)
+                     captions=o.get("captions", True), status="queued", version=0,
+                     corner_tag=o.get("corner_tag", ""), music=o.get("music", "none"), music_vol=o.get("music_vol", 0.18),
+                     progress_bar=o.get("progress_bar", True), punch_zoom=o.get("punch_zoom", True),
+                     teaser_hook=o.get("teaser_hook", False), teaser_text=o.get("teaser_text", "WAIT FOR IT... 👀"),
+                     teaser_dur=o.get("teaser_dur", 2.2))
             # Only the gameplay layout uses a webcam, so it is only looked for then, and only once: a
             # stream with no webcam is not looked for again on every clip of it.
             if o["layout"] == "gameplay" and face is False:

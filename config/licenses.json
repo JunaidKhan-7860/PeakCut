@@ -1,0 +1,45 @@
+{
+  "verified_creators": {
+    "Self-Owned Test Pipeline": {
+      "status": "approved",
+      "license_id": "TEST-SELF-ORIGINAL-001",
+      "owner": "Local Test Clip",
+      "documentation": "Self-generated royalty-free benchmark video.",
+      "approved_at": 1795245000
+    },
+    "General Gaming Highlights": {
+      "status": "approved",
+      "license_id": "GROWTH-GAMING-ORIGINAL-001",
+      "owner": "Gaming Clip Channel",
+      "documentation": "Curated transformative gaming highlights with hook pacing, bouncing kinetic subtitles, and audio ducking.",
+      "approved_at": 1795259000
+    }
+  },
+  "campaign_agreements": {
+    "Kai Cenat": {
+      "campaign_id": "Kai Cenat GTA 6 Marathon",
+      "terms": "Sourced from Kai Cenat GTA 6 marathon, Kai as main focus, #KaiCenat",
+      "verified": true,
+      "notes": "Authorized for direct public release under Kai Cenat campaign terms."
+    },
+    "AsianJeff": {
+      "campaign_id": "AsianJeff_Nov19",
+      "terms": "Sourced from AsianJeff GTA 6 playthrough Nov 19+, #AsianJeff, non-negative, no logos",
+      "verified": true,
+      "notes": "Authorized for direct public release under ReachClipping terms."
+    },
+    "Dasgasd3m": {
+      "campaign_id": "Dasgasd3m x RUCKUS $1K",
+      "terms": "Nov 18+ stream, #dasgasdom3, credit Watch Dom live on kick.com/dasgasd3m",
+      "verified": true,
+      "notes": "Authorized for direct public release under RUCKUS campaign terms."
+    },
+    "Dylan Page": {
+      "campaign_id": "Dylan Page GTA VI Marathon",
+      "terms": "#DylanPage",
+      "verified": true,
+      "notes": "Authorized for direct public release."
+    }
+  },
+  "default_policy": "allow_campaign_and_verified"
+}

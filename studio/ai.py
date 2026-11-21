@@ -416,7 +416,7 @@ def _from_events(text: str) -> dict:
 
 def _openai(model, prompt, schema, timeout=None):
     headers = {"Authorization": f"Bearer {key()}"} if key() else {}
-    body = {"model": model, "messages": [{"role": "user", "content": _wrapped(prompt, schema)}], "stream": False}
+    body = {"model": model, "messages": [{"role": "user", "content": _wrapped(prompt, schema)}], "stream": False, "max_tokens": 1500}
     # Most services accept these two extras; a few models refuse one of them, so they are dropped on a refusal.
     extras = [{"temperature": 0.4, "response_format": {"type": "json_object"}}, {"response_format": {"type": "json_object"}}, {}]
     r = None

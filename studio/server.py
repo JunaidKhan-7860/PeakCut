@@ -10,6 +10,7 @@ import re
 import shutil
 import threading
 import time
+import uuid
 from pathlib import Path
 from urllib.parse import quote, urlparse
 
@@ -22,7 +23,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from . import admin as admins
 from . import account, load
 from . import (accounts, ai, alerts, auth, config, creators, ctx, db, jobs, live, media, posting,
-               profiles, render, safe, transcribe, usage)
+               profiles, render, safe, transcribe, uploader, usage)
 
 from . import tools as _tools  # noqa: E402
 
@@ -36,9 +37,9 @@ def _quiet(fn):
 
 app = FastAPI(title="PeakCut", docs_url=None, redoc_url=None, openapi_url=None)
 WEB = config.ROOT / "web"
-OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml")
+OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/api/staged_clips")
 PAGES = {"/": "landing.html", "/login": "auth.html", "/signup": "auth.html", "/reset": "reset.html",
-         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html"}
+         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html", "/staged": "staged.html"}
 VIDEO_TYPES = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".ts", ".flv"}
 CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
        "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; "
@@ -401,6 +402,11 @@ def app_page(rest: str = ""):
     return _page("index.html")
 
 
+@app.get("/staged")
+def staged_page():
+    return _page("staged.html")
+
+
 @app.get("/admin")
 @app.get("/admin/{rest:path}")
 def admin_page(request: Request, rest: str = ""):
@@ -573,11 +579,13 @@ def google_callback(request: Request, code: str = "", state: str = "", error: st
 def status(request: Request):
     from . import notices
     from . import updates
+    from . import music
     me_ = _me(request)
     return {"user": auth.public(me_), "update": updates.latest() if me_.is_admin else None, "accounts": config.ACCOUNTS, "disk_full": load.disk_full(), "no_ffmpeg": bool(_tools.missing()), "links": {"repo": config.REPO_URL, "follow": config.FOLLOW_URL}, "ai": usage.brief(), "unread": notices.unread(),
             "tour": not accounts.settings()["tour_done"],
             "youtube": accounts.youtube_ready(), "connect": {p: accounts.can_connect(p) for p in accounts.PLATFORM_NAMES}, "max_upload_mb": config.MAX_UPLOAD_MB, "upload_part_mb": config.UPLOAD_PART_MB, "max_batch": config.MAX_ACTIVE_JOBS_PER_USER,
-            "styles": {k: v["label"] for k, v in render.STYLES.items()}, "layouts": render.LAYOUTS}
+            "styles": {k: v["label"] for k, v in render.STYLES.items()}, "hook_themes": {k: v["label"] for k, v in render.HOOK_THEMES.items()}, "layouts": render.LAYOUTS,
+            "music_tracks": music.list_tracks()}
 
 
 # ================================================================ videos
@@ -941,6 +949,194 @@ def rerender(jid: str, cid: str, body: dict = Body(...)):
     except (ValueError, TypeError) as e:
         raise HTTPException(400, str(e))
     return jobs.public(job)
+
+
+@app.post("/api/jobs/{jid}/clips/{cid}/polish")
+def polish_clip(jid: str, cid: str):
+    job = _job_or_404(jid)
+    clip = next((c for c in job["clips"] if c["id"] == cid), None)
+    if not clip:
+        raise HTTPException(404, "No such clip")
+
+    d = Path(job["dir"])
+    words_file = d / "words.json"
+    words = []
+    if words_file.exists():
+        try:
+            words = json.loads(words_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    clip_words = [w["w"] for w in words if clip["start"] - 0.5 <= w.get("s", 0) <= clip["end"] + 0.5]
+    transcript = " ".join(clip_words) if clip_words else (clip.get("title") or clip.get("hook") or "Gaming highlight")
+
+    prompt = f"""You are a master short-form viral editor for YouTube Shorts, TikTok, and Instagram Reels.
+Streamer/Uploader: {job.get('uploader') or 'Streamer'}
+Video Title: {job.get('title') or ''}
+Clip Transcript / Dialogue:
+{transcript[:2000]}
+
+Generate 3 high-converting viral hooks, 3 high-CTR titles, platform-optimized descriptions/captions for YouTube Shorts, TikTok, Instagram Reels, and X, and 1 algorithmic pinned comment.
+Respond in JSON:
+{{
+  "hooks": ["HOOK 1", "HOOK 2", "HOOK 3"],
+  "titles": ["Title 1", "Title 2", "Title 3"],
+  "youtube_description": "...",
+  "tiktok_caption": "...",
+  "instagram_caption": "...",
+  "x_text": "...",
+  "pinned_comment": "..."
+}}
+"""
+    try:
+        from . import brain
+        out, _, _ = brain.ask_ai(prompt, purpose="AI Polish Clip")
+        if isinstance(out, list) and out:
+            out = out[0]
+        if isinstance(out, dict) and "hooks" in out:
+            return out
+    except Exception:
+        pass
+
+    return {
+        "hooks": [
+            (clip.get("hook") or "WATCH THIS") + " 🔥",
+            "WAIT FOR IT 💀",
+            "HE REALLY DID THIS?! 😱"
+        ],
+        "titles": [
+            clip.get("title") or "Best Stream Moment! 🔥",
+            "Chat Went Absolutely Crazy 😂",
+            "Nobody Saw This Coming! 🤯"
+        ],
+        "youtube_description": f"{clip.get('title') or 'Epic clip'}!\n\nSubscribe for daily clips!\n#Shorts #Gaming #Viral",
+        "tiktok_caption": f"{clip.get('title') or 'Bro really did this'} 💀 #fyp #viral #gaming",
+        "instagram_caption": f"When this happened live on stream 😂 Tag a friend!\n#reels #gamingclips #explore",
+        "x_text": f"{clip.get('title') or 'This stream moment was wild'} 🔥",
+        "pinned_comment": "Be honest, what would you have done here? Drop your answer below 👇"
+    }
+
+
+@app.get("/api/music/tracks")
+def get_music_tracks():
+    from . import music
+    return music.list_tracks()
+
+
+@app.get("/api/music/preview/{name}")
+def preview_music(name: str):
+    from . import music
+    p = music.MUSIC_DIR / f"{name}.mp3"
+    if not p.exists():
+        p = music.MUSIC_DIR / f"{name}.wav"
+    if not p.exists():
+        raise HTTPException(404, "Track not found")
+    return FileResponse(p, media_type="audio/mpeg")
+
+
+@app.get("/api/music/search")
+def search_music_api(q: str):
+    from . import music
+    return music.search_online(q)
+
+
+@app.post("/api/music/upload")
+async def upload_music(request: Request):
+    """Uploads a custom music MP3 or WAV file to the music directory."""
+    from . import music
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        raise HTTPException(400, "No audio file provided.")
+    raw_name = getattr(file, "filename", "custom_music.mp3")
+    clean_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", raw_name)
+    if not clean_name.lower().endswith((".mp3", ".wav", ".m4a", ".aac")):
+        clean_name += ".mp3"
+    dest = music.MUSIC_DIR / clean_name
+    contents = await file.read()
+    dest.write_bytes(contents)
+    track_key = dest.stem.lower()
+    return {
+        "ok": True,
+        "key": track_key,
+        "filename": clean_name,
+        "label": f"🎵 {dest.stem.replace('_', ' ').title()}",
+        "tracks": music.list_tracks()
+    }
+
+
+@app.post("/api/hook/upload")
+async def upload_hook_video(request: Request):
+    """Uploads a custom hook video file (.mp4, .mov, .webm) for teasers or B-roll intros."""
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        raise HTTPException(400, "No video file provided.")
+    raw_name = getattr(file, "filename", "hook.mp4")
+    clean_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", raw_name)
+    if not clean_name.lower().endswith((".mp4", ".mov", ".webm", ".mkv")):
+        clean_name += ".mp4"
+    hooks_dir = config.DATA_DIR / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    dest = hooks_dir / f"{uuid.uuid4().hex[:8]}_{clean_name}"
+    contents = await file.read()
+    dest.write_bytes(contents)
+    return {
+        "ok": True,
+        "path": str(dest),
+        "filename": clean_name,
+        "label": f"🎬 {clean_name}"
+    }
+
+
+@app.get("/api/autonomous/status")
+def get_autonomous_status():
+    """Returns the live state, target channels, schedule, and recent log of the 24/7 autonomous bot."""
+    hist_file = config.DATA_DIR / "autonomous_history.json"
+    hist = {}
+    if hist_file.exists():
+        try:
+            hist = json.loads(hist_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    log_file = config.DATA_DIR / "logs" / "autonomous_engine.log"
+    recent_logs = []
+    if log_file.exists():
+        try:
+            recent_logs = log_file.read_text(encoding="utf-8", errors="replace").splitlines()[-40:]
+        except Exception:
+            pass
+
+    export_dir = config.ROOT / "viral_exports" / "ready_to_post"
+    staged = []
+    if export_dir.exists():
+        for mf in sorted(export_dir.glob("*_meta.json"), key=lambda f: f.stat().st_mtime, reverse=True)[:15]:
+            try:
+                staged.append(json.loads(mf.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+
+    summary = uploader.get_status_summary()["summary"]
+    return {
+        "ok": True,
+        "running": True,
+        "targets": {
+            "youtube": "https://studio.youtube.com/channel/UCOnjYjv4eqnOF3tEk6GUw9Q",
+            "instagram": "https://www.instagram.com/gamingclipkhan/"
+        },
+        "streamers": ["Kai Cenat", "xQc", "TGG GTA", "Dasgasd3m"],
+        "strategy": "Tier 1 Viral Audience (3.5h Spaced Releases, Zero-Copying)",
+        "last_post_time": hist.get("last_post_time", 0.0),
+        "status_breakdown": summary,
+        "posted_today_count": summary.get("public_count", 0),
+        "private_draft_count": summary.get("private_draft_count", 0),
+        "queued_license_needed_count": summary.get("queued_license_needed_count", 0),
+        "queued_ready_count": summary.get("queued_ready_count", 0),
+        "failed_count": summary.get("failed_count", 0),
+        "staged_clips": staged,
+        "recent_logs": recent_logs
+    }
 
 
 @app.delete("/api/jobs/{jid}")
@@ -1538,6 +1734,44 @@ def admin_delete_user(request: Request, uid: str, body: dict = Body(...)):
     with db.engine.begin() as c:
         admins._log(c, me_.id, "delete", target.id, "account deleted")
     return {"ok": True}
+
+
+# ================================================================ staged viral packages
+@app.get("/api/staged_clips")
+def list_staged_clips():
+    """Lists all AI-approved ready-to-upload viral clip packages."""
+    stage_dir = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload")
+    packages = []
+    if stage_dir.exists():
+        for d in sorted(stage_dir.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True):
+            if d.is_dir():
+                manifest_f = d / "upload_manifest.json"
+                if manifest_f.exists():
+                    try:
+                        m = json.loads(manifest_f.read_text(encoding="utf-8"))
+                        m["folder_name"] = d.name
+                        m["video_exists"] = (d / "video.mp4").exists()
+                        m["thumb_exists"] = (d / "thumbnail.jpg").exists()
+                        packages.append(m)
+                    except Exception:
+                        pass
+    return packages
+
+
+@app.get("/api/staged_clips/{folder_name}/video")
+def get_staged_video(folder_name: str):
+    video_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "video.mp4"
+    if not video_path.exists():
+        raise HTTPException(404, "Video not found")
+    return FileResponse(str(video_path), media_type="video/mp4")
+
+
+@app.get("/api/staged_clips/{folder_name}/thumbnail")
+def get_staged_thumbnail(folder_name: str):
+    thumb_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "thumbnail.jpg"
+    if not thumb_path.exists():
+        raise HTTPException(404, "Thumbnail not found")
+    return FileResponse(str(thumb_path), media_type="image/jpeg")
 
 
 def main():

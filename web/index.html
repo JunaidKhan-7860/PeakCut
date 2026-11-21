@@ -1858,8 +1858,12 @@ function drawCreatorForm() {
       </div></div>
     <div class="card"><h2>Clips</h2><p class="help">How this creator's clips look.</p>
       <div class="fields"><label class="sw span"><input type="checkbox" data-k="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>Generate captions</label>
+        <label class="sw span"><input type="checkbox" data-k="progress_bar" ${c.progress_bar === false ? "" : "checked"}><span>Animated retention progress bar<small>Smooth animated neon/gold line at the bottom of clips to maximize viewer watch time.</small></span></label>
+        <label class="sw span"><input type="checkbox" data-k="punch_zoom" ${c.punch_zoom === false ? "" : "checked"}><span>Dynamic hook zoom (Punch-in)<small>Zooms in 15% on the speaker during the hook to capture immediate visual attention.</small></span></label>
         <label class="f">Caption style<select data-k="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
         <label class="f">Layout<select data-k="layout">${opts(S.status.layouts, c.layout)}</select></label>
+        <label class="f">Background music<select data-k="music">${opts(S.status.music_tracks || {}, c.music || "none")}</select></label>
+        <label class="f">Default Corner Tag / Watermark (Optional)<input data-k="corner_tag" value="${esc(c.corner_tag || "")}" placeholder="e.g. 🔴 Kai Cenat or Watch @Streamer"><small class="sub" style="font-weight:400">Frosted watermark in corner of all clips made for this creator.</small></label>
         <label class="f">Game<input data-k="game" value="${esc(c.game || "")}" placeholder="Read from the title"><small class="sub" style="font-weight:400">Left empty, the game is read from the stream's title. Set it for a streamer whose title says nothing: GTA 6, Fortnite, Elden Ring.</small></label>
         <label class="f">Shortest clip (seconds)<input data-k="min_len" type="number" value="${c.min_len}"></label>
         <label class="f">Longest clip (seconds)<input data-k="max_len" type="number" value="${c.max_len}"></label>
@@ -1925,7 +1929,54 @@ function drawOverview() {
   const state = r => r.state === "recording" ? `<span class="pill live"><span class="dot"></span>Recording</span>` : r.state === "waiting" ? `<span class="pill warn">Waiting for live</span>` : `<span class="pill">Idle</span>`;
   const pst = p => p.status === "posted" ? `<span class="pill ok">Posted</span>` : p.status === "failed" ? `<span class="pill bad">Failed</span>` : p.status === "posting" ? `<span class="pill warn">Posting now</span>` : `<span class="pill warn">${clock(p.due_at)}</span>`;
   const steps = nextSteps(o);
-  put(box, `<div class="tiles">
+  put(box, `
+    <!-- 24/7 AUTONOMOUS VIRAL ENGINE STATUS BANNER & MONITOR -->
+    <div style="background:linear-gradient(135deg, rgba(34,197,94,0.1), rgba(245,158,11,0.08));border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px 20px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,0.15)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e;"></span>
+          <h2 style="margin:0;font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-0.2px">🤖 24/7 Autonomous Viral Machine: <span style="color:#22c55e">ACTIVE & RUNNING</span></h2>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn small primary" data-act="refresh-auto-log" style="font-size:12px">🔄 Refresh Bot Log</button>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;font-size:12px">
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:10px 14px">
+          <span style="color:var(--dim);display:block;margin-bottom:4px">Target Accounts (Logged in Chrome)</span>
+          <div style="font-weight:600;display:flex;flex-direction:column;gap:3px">
+            <span>🔴 <a href="https://studio.youtube.com/channel/UCOnjYjv4eqnOF3tEk6GUw9Q" target="_blank" style="color:var(--brand-ink)">YouTube Gaming Channel</a></span>
+            <span>📸 <a href="https://www.instagram.com/gamingclipkhan/" target="_blank" style="color:var(--brand-ink)">Instagram @gamingclipkhan</a></span>
+          </div>
+        </div>
+
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:10px 14px">
+          <span style="color:var(--dim);display:block;margin-bottom:4px">Originality & Transformation</span>
+          <div style="font-weight:600;color:#22c55e">⚡ 100% Original Raw Stream Cuts</div>
+          <span style="color:var(--dim);font-size:11px">Zero stolen clips · Climax Teaser Hook (2.2s) · Punch Zoom · Bouncing Captions</span>
+        </div>
+
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:10px 14px">
+          <span style="color:var(--dim);display:block;margin-bottom:4px">Tier 1 Streamer Scout Roster</span>
+          <div style="font-weight:600">Kai Cenat · xQc · TGG GTA · Dasgasd3m</div>
+          <span style="color:var(--dim);font-size:11px">Auto-discovers raw broadcasts & uncapped gameplay</span>
+        </div>
+
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:10px 14px">
+          <span style="color:var(--dim);display:block;margin-bottom:4px">Anti-Spam Cadence (US Peak Hours)</span>
+          <div style="font-weight:600;color:#f59e0b">⏳ 1 clip every 3.5h – 4h</div>
+          <span style="color:var(--dim);font-size:11px">Next window: 12:30 PM / 4:30 PM / 8:00 PM EST</span>
+        </div>
+      </div>
+
+      <!-- Live Terminal Output Preview -->
+      <div id="auto-engine-logbox" style="margin-top:12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px 14px;font-family:Consolas,monospace;font-size:11px;color:#c9d1d9;max-height:140px;overflow-y:auto;line-height:1.45">
+        <div style="color:#8b949e">Loading autonomous engine live log...</div>
+      </div>
+    </div>
+
+    <div class="tiles">
       <div class="tile"><i>${ic("radio")}</i><b>${o.recording}</b><span>Recording now</span></div>
       <div class="tile"><i>${ic("scissors")}</i><b>${sum("clips_today")}</b><span>Clips today</span></div>
       <div class="tile"><i>${ic("send")}</i><b>${sum("posted_today")}</b><span>Posted today</span></div>
@@ -2141,17 +2192,160 @@ function drawClipDlg(full) {
       <div class="panel">
         <div class="job-head" style="margin:0"><div><span class="badge ${scoreCls(c.score)}" style="position:static">${c.judges ? "Words " + c.judges.words + (c.judges.reaction ? " · Reaction " + c.judges.reaction : "") : c.score ? "Score " + c.score : "Clipped by hand"}</span>
           <p class="sub" style="margin-top:8px">${esc(c.reason || "")}</p></div><button class="btn icon ghost" data-act="closedlg" aria-label="Close">${ic("x")}</button></div>
-        <h3>On the video</h3>
-        <label class="f">Big text<input data-f="hook" value="${esc(c.hook)}"></label>
-        <label class="sw"><input type="checkbox" data-f="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>Generate captions</label>
-        <div class="two"><label class="f">Caption style<select data-f="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
-          <label class="f">Layout<select data-f="layout">${opts(S.status.layouts, c.layout)}</select></label></div>
-        <div class="two"><label class="f">Start (seconds)<input data-f="start" type="number" step="0.5" value="${c.start}"></label>
-          <label class="f">End (seconds)<input data-f="end" type="number" step="0.5" value="${c.end}"></label></div>
-        <h3>Post text</h3>
-        <label class="f">Title<input data-f="title" value="${esc(c.title)}"></label>
-        <label class="f">Description<textarea data-f="description" rows="2">${esc(c.description)}</textarea></label>
-        <button class="btn" data-act="remake">${ic("scissors")}Save and re-make clip</button>
+        
+        <!-- AI VIRAL POLISH -->
+        <div style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(168,85,247,0.1));padding:10px 14px;border-radius:12px;border:1px solid rgba(245,158,11,0.3);margin-top:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong style="color:#f59e0b;font-size:13px">✨ AI Viral Polish</strong>
+              <div style="font-size:11px;color:var(--dim)">Generate 3 viral hooks, high-CTR titles & captions</div>
+            </div>
+            <button type="button" class="btn small" data-act="aipolish" id="btn-aipolish" style="height:30px;font-size:12px">${ic("bolt")}Re-Roll AI</button>
+          </div>
+          <div id="ai-polish-results" style="display:none;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)"></div>
+        </div>
+
+        <!-- SECTION 1: HOOK & VISUAL DYNAMICS -->
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13px;color:var(--brand-ink)">🎯 1. Viral Hook & Visual Style</strong>
+            <span style="font-size:11px;color:var(--dim)">Top-Clipper Retention</span>
+          </div>
+          <label class="f">Big Hook Headline<input data-f="hook" value="${esc(c.hook)}" placeholder="e.g. WAIT TILL THE END 💀"></label>
+          <div class="two" style="margin:8px 0">
+            <label class="sw"><input type="checkbox" data-f="punch_zoom" ${c.punch_zoom === false ? "" : "checked"}>🔍 Hook Punch Zoom (+15%)</label>
+            <label class="sw"><input type="checkbox" data-f="progress_bar" ${c.progress_bar === false ? "" : "checked"}>📊 Retention Progress Bar</label>
+          </div>
+          <div class="two" style="margin-bottom:6px">
+            <label class="sw"><input type="checkbox" data-f="captions" data-caption-toggle ${c.captions === false ? "" : "checked"}>💬 Word-by-Word Captions</label>
+          </div>
+          <div class="two">
+            <label class="f">Caption Style<select data-f="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
+            <label class="f">Hook Theme<select data-f="hook_theme">${opts(S.status.hook_themes || {white:"Classic White Pill", yellow:"MrBeast Yellow Pill", cyber:"Cyber Cyan Pill", dark:"Dark Mode Minimal", fire:"Hot Crimson Pill"}, c.hook_theme || "white")}</select></label>
+          </div>
+        </div>
+
+        <!-- SECTION 1B: CLIMAX TEASER HOOK (FLASH-FORWARD TEASER) -->
+        <div style="background:linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.08));border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="sw" style="font-weight:700;font-size:13px;color:#ef4444;cursor:pointer">
+              <input type="checkbox" data-f="teaser_hook" id="teaser_hook_chk" ${c.teaser_hook ? "checked" : ""} onchange="$('#teaser_hook_options').style.display = this.checked ? 'block' : 'none'">⚡ Climax Teaser Hook (Show peak moment first)
+            </label>
+            <span style="font-size:11px;color:var(--dim)">Flash-Forward Hook</span>
+          </div>
+          <p style="font-size:11.5px;color:var(--dim);margin:0 0 8px 0;line-height:1.4">
+            Plays the peak climax or wildest moment for ~2s right at 00:00 with a teaser badge, then flash-cuts to the story from the beginning.
+          </p>
+          <div id="teaser_hook_options" style="${c.teaser_hook ? '' : 'display:none;'}padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+            <label class="f" style="margin-bottom:6px">Teaser Banner Text
+              <input data-f="teaser_text" id="teaser_text_input" value="${esc(c.teaser_text || 'WAIT FOR IT... 👀')}" placeholder="e.g. WAIT FOR IT... 👀">
+            </label>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='WAIT FOR IT... 👀'">WAIT FOR IT... 👀</button>
+              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='WATCH TILL END 😱'">WATCH TILL END 😱</button>
+              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='HOW IT HAPPENED 👇'">HOW IT HAPPENED 👇</button>
+              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='DON\'T BLINK 💥'">DON'T BLINK 💥</button>
+            </div>
+            <div class="two">
+              <label class="f">Teaser Duration
+                <select data-f="teaser_dur">
+                  <option value="1.5" ${c.teaser_dur === 1.5 ? "selected" : ""}>1.5s (Ultra Fast Cut)</option>
+                  <option value="2.2" ${(c.teaser_dur == null || c.teaser_dur === 2.2) ? "selected" : ""}>2.2s (Recommended)</option>
+                  <option value="3.0" ${c.teaser_dur === 3.0 ? "selected" : ""}>3.0s (Full Punchline Teaser)</option>
+                </select>
+              </label>
+              <label class="f">Climax Timestamp (sec)
+                <input data-f="teaser_start" type="number" step="0.5" value="${c.teaser_start != null ? c.teaser_start : ''}" placeholder="Auto (peaks at ~70%)">
+                <small class="sub" style="font-size:10px;color:var(--dim)">Leave blank for auto-detected climax</small>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: BACKGROUND MUSIC (AI AUTO, REMOVE, OR ADD MINE) -->
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+            <strong style="font-size:13px;color:var(--brand-ink)">🎵 2. Background Music & Audio</strong>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="btn small" data-act="music-auto" title="Let AI auto-pick music based on video mood">🤖 AI Auto</button>
+              <button type="button" class="btn small" data-act="music-remove" title="Remove music completely" style="color:var(--bad)">🚫 Remove Music</button>
+              <button type="button" class="btn small primary" data-act="music-upload-btn" title="Add your own custom MP3/WAV">📁 Add Mine</button>
+              <input type="file" id="custom_music_file" accept="audio/*" style="display:none">
+            </div>
+          </div>
+          <div class="two">
+            <label class="f">Selected Track
+              <select data-f="music" id="clip_music_select">
+                <option value="none" ${c.music === "none" ? "selected" : ""}>🚫 Off (No Music)</option>
+                <option value="auto" ${c.music === "auto" ? "selected" : ""}>✨ AI Auto-Pick (by video emotion)</option>
+                ${Object.entries(S.status.music_tracks || {}).filter(([k]) => k !== "none" && k !== "auto").map(([k, v]) => `<option value="${esc(k)}" ${k === c.music ? "selected" : ""}>${esc(v)}</option>`).join("")}
+              </select>
+            </label>
+            <label class="f">Music Volume & Speech Ducking
+              <input data-f="music_vol" type="range" min="0.05" max="0.45" step="0.01" value="${c.music_vol || 0.18}">
+              <small class="sub" style="font-size:11px;color:var(--dim)">Auto-drops volume when voice speaks</small>
+            </label>
+          </div>
+        </div>
+
+        <!-- SECTION 3: BRANDING & TIMING -->
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13px;color:var(--brand-ink)">🏷️ 3. Watermark Badge & Timing</strong>
+            <span style="font-size:11px;color:var(--dim)">Brand & Framing</span>
+          </div>
+          <div class="two">
+            <label class="f">Corner Tag / Watermark (Optional)
+              <input data-f="corner_tag" value="${esc(c.corner_tag || '')}" placeholder="e.g. 🔴 Kai Cenat or Watch @Streamer">
+              <small class="sub" style="font-size:11px;color:var(--dim)">Frosted pill watermark in corner</small>
+            </label>
+            <label class="f">Video Layout<select data-f="layout">${opts(S.status.layouts, c.layout)}</select></label>
+          </div>
+          <div class="two" style="margin-top:8px">
+            <label class="f">Start Time (sec)
+              <div style="display:flex;gap:4px">
+                <button type="button" class="btn small" data-act="nudgestart" data-step="-1" style="height:36px;width:34px;padding:0;min-width:34px" title="Back 1s">-1s</button>
+                <input data-f="start" type="number" step="0.5" value="${c.start}" style="flex:1">
+                <button type="button" class="btn small" data-act="nudgestart" data-step="1" style="height:36px;width:34px;padding:0;min-width:34px" title="Forward 1s">+1s</button>
+              </div>
+            </label>
+            <label class="f">End Time (sec)
+              <div style="display:flex;gap:4px">
+                <button type="button" class="btn small" data-act="nudgeend" data-step="-1" style="height:36px;width:34px;padding:0;min-width:34px" title="Back 1s">-1s</button>
+                <input data-f="end" type="number" step="0.5" value="${c.end}" style="flex:1">
+                <button type="button" class="btn small" data-act="nudgeend" data-step="1" style="height:36px;width:34px;padding:0;min-width:34px" title="Forward 1s">+1s</button>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Transcript & Speech Words Editor -->
+        <details style="margin:4px 0 10px 0;background:var(--subtle, rgba(255,255,255,0.03));border-radius:10px;padding:10px 12px;border:1px solid var(--line)">
+          <summary style="font-size:12px;font-weight:600;cursor:pointer;color:var(--dim)">✏️ Edit Caption Words (Fix Typos / Streamer Names)</summary>
+          <div style="margin-top:8px">
+            <textarea data-f="words_text" rows="3" placeholder="Caption words transcribed...">${esc(c.words_text || "")}</textarea>
+            <small class="help" style="margin-top:4px">Fix any misheard words or streamer names here. They will appear in the re-rendered captions.</small>
+          </div>
+        </details>
+
+        <!-- ACTION BUTTON: RE-MAKE CLIP -->
+        <button class="btn primary" data-act="remake" style="width:100%;height:44px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;box-shadow:0 2px 10px rgba(0,0,0,0.15)">
+          ${ic("scissors")} ⚡ Re-render Clip with My Edits
+        </button>
+
+        <!-- Social Copy Shortcuts -->
+        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
+          <strong style="font-size:13px;display:block;margin-bottom:8px;color:var(--brand-ink)">📋 One-Click Copy for Socials</strong>
+          <label class="f" style="margin-bottom:6px">Title<input data-f="title" value="${esc(c.title)}"></label>
+          <label class="f" style="margin-bottom:8px">Description<textarea data-f="description" rows="2">${esc(c.description)}</textarea></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <button type="button" class="btn small" data-act="copyshorts">▶️ YouTube Shorts</button>
+            <button type="button" class="btn small" data-act="copytiktok">🎵 TikTok</button>
+            <button type="button" class="btn small" data-act="copyreels">📸 Instagram Reels</button>
+            <button type="button" class="btn small" data-act="copyx">✖️ X / Twitter</button>
+          </div>
+        </div>
+
         <h3>Post it</h3>
         <div id="dposts" class="row" style="gap:4px"></div>
         ${S.accounts.length ? `<div class="row">${S.accounts.map(a => `<label class="ck"><input type="checkbox" data-pacc value="${esc(a.id)}">${esc(a.label)} · ${esc(a.name)}</label>`).join("")}</div>
@@ -2458,6 +2652,135 @@ document.addEventListener("click", async e => {
       if (!await ask("Disconnect this account?", "Posts still waiting for it will fail.", "Disconnect", true)) return;
       await api(`/api/accounts/${d.id}`, {method:"DELETE"}); await tick(); return drawSettings();
     }
+    if (a === "nudgestart") {
+      const inp = $("#clipdlg [data-f='start']");
+      if (inp) inp.value = Math.max(0, (parseFloat(inp.value) || 0) + parseFloat(d.step || 0)).toFixed(1);
+      return;
+    }
+    if (a === "nudgeend") {
+      const inp = $("#clipdlg [data-f='end']");
+      if (inp) inp.value = Math.max(0, (parseFloat(inp.value) || 0) + parseFloat(d.step || 0)).toFixed(1);
+      return;
+    }
+    if (a === "music-remove") {
+      const sel = $("#clipdlg [data-f='music']");
+      if (sel) { sel.value = "none"; toast("Music set to Off (No Music). Click Re-render to apply.", "ok"); }
+      return;
+    }
+    if (a === "music-auto") {
+      const sel = $("#clipdlg [data-f='music']");
+      if (sel) { sel.value = "auto"; toast("AI will auto-pick music by emotion. Click Re-render to apply.", "ok"); }
+      return;
+    }
+    if (a === "music-upload-btn") {
+      const inp = $("#custom_music_file");
+      if (inp) {
+        inp.onchange = async () => {
+          const f = inp.files[0];
+          if (!f) return;
+          const fd = new FormData();
+          fd.append("file", f);
+          toast("Uploading custom music…", "ok");
+          try {
+            const res = await fetch("/api/music/upload", {method:"POST", body:fd}).then(r => r.json());
+            if (res.ok) {
+              S.status.music_tracks = res.tracks;
+              const sel = $("#clipdlg [data-f='music']");
+              if (sel) {
+                let opt = sel.querySelector(`option[value="${res.key}"]`);
+                if (!opt) {
+                  opt = document.createElement("option");
+                  opt.value = res.key;
+                  sel.appendChild(opt);
+                }
+                opt.textContent = res.label;
+                sel.value = res.key;
+              }
+              toast(`Added & selected "${res.label}"! Click Re-render to apply.`, "ok");
+            } else {
+              toast(res.detail || "Upload failed", "bad");
+            }
+          } catch(e) {
+            toast("Upload failed: " + e.message, "bad");
+          }
+        };
+        inp.click();
+      }
+      return;
+    }
+    if (a === "aipolish") {
+      const btn = $("#btn-aipolish"), container = $("#ai-polish-results");
+      if (btn) btn.disabled = true;
+      toast("Asking AI to generate viral hooks…", "ok");
+      try {
+        const res = await api(`/api/jobs/${D.jid}/clips/${D.cid}/polish`, {method:"POST"});
+        if (container) {
+          container.style.display = "block";
+          let html = `<div style="display:flex;flex-direction:column;gap:8px">`;
+          if (res.hooks && res.hooks.length) {
+            html += `<div><span style="color:var(--dim);font-weight:600">Click to apply Hook:</span><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">`;
+            res.hooks.forEach(h => {
+              html += `<button type="button" class="btn small" data-act="pickhook" data-text="${esc(h)}" style="font-size:11px;padding:3px 8px">${esc(h)}</button>`;
+            });
+            html += `</div></div>`;
+          }
+          if (res.titles && res.titles.length) {
+            html += `<div><span style="color:var(--dim);font-weight:600">Click to apply Title:</span><div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">`;
+            res.titles.forEach(t => {
+              html += `<button type="button" class="btn ghost small" data-act="picktitle" data-text="${esc(t)}" style="font-size:11px;text-align:left;justify-content:flex-start;padding:3px 6px">${esc(t)}</button>`;
+            });
+            html += `</div></div>`;
+          }
+          if (res.pinned_comment) {
+            html += `<div style="background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:6px;border:1px solid var(--line)"><span style="color:#f59e0b;font-weight:600">💬 Pinned Comment:</span><p style="margin:2px 0 0 0;font-size:11px">${esc(res.pinned_comment)}</p></div>`;
+          }
+          html += `</div>`;
+          container.innerHTML = html;
+        }
+        toast("AI Hooks ready! Click any to apply.", "ok");
+      } catch(err) {
+        toast("AI polish failed: " + err.message, "bad");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+      return;
+    }
+    if (a === "pickhook") {
+      const inp = $("#clipdlg [data-f='hook']");
+      if (inp && d.text) { inp.value = d.text; toast("Hook applied!", "ok"); }
+      return;
+    }
+    if (a === "picktitle") {
+      const inp = $("#clipdlg [data-f='title']");
+      if (inp && d.text) { inp.value = d.text; toast("Title applied!", "ok"); }
+      return;
+    }
+    if (a === "copyshorts") {
+      const title = $("#clipdlg [data-f='title']")?.value || "";
+      const desc = $("#clipdlg [data-f='description']")?.value || "";
+      navigator.clipboard.writeText(`${title} #Shorts\n\n${desc}`);
+      return toast("Copied YouTube Shorts text!", "ok");
+    }
+    if (a === "copytiktok") {
+      const title = $("#clipdlg [data-f='title']")?.value || "";
+      navigator.clipboard.writeText(`${title} #fyp #viral #trending`);
+      return toast("Copied TikTok caption!", "ok");
+    }
+    if (a === "copyreels") {
+      const title = $("#clipdlg [data-f='title']")?.value || "";
+      const desc = $("#clipdlg [data-f='description']")?.value || "";
+      navigator.clipboard.writeText(`${title}\n\n${desc}\n#reels #viral #explore`);
+      return toast("Copied Instagram Reels caption!", "ok");
+    }
+    if (a === "copyx") {
+      const title = $("#clipdlg [data-f='title']")?.value || "";
+      navigator.clipboard.writeText(`${title} #viral`);
+      return toast("Copied X / Twitter post!", "ok");
+    }
+    if (a === "refresh-auto-log") {
+      if (typeof updateAutoLog === "function") await updateAutoLog();
+      return toast("Live logs refreshed!", "ok");
+    }
     if (a === "remake") {
       const body = {}; $$("#clipdlg [data-f]").forEach(i => {
         body[i.dataset.f] = i.type === "checkbox" ? i.checked : i.type === "number" ? Number(i.value) : i.value;
@@ -2498,7 +2821,21 @@ $("#main").addEventListener("scroll", () => $(".topbar").classList.toggle("stuck
   if (S.status.tour && !$("#formdlg").open) setTimeout(startTour, 500);   // once, the first time someone signs in
   checkNew(true);
   setInterval(async () => { try { S.status = await api("/api/status"); drawShell(); if (S.view === "overview") drawOverview(); checkNew(); } catch {} }, 15000);
+  setInterval(updateAutoLog, 6000);
+  setTimeout(updateAutoLog, 1000);
 })();
+
+async function updateAutoLog() {
+  const box = $("#auto-engine-logbox");
+  if (!box) return;
+  try {
+    const res = await api("/api/autonomous/status");
+    if (res && res.recent_logs && res.recent_logs.length) {
+      box.innerHTML = res.recent_logs.map(l => `<div>${esc(l)}</div>`).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+  } catch(e) {}
+}
 </script>
 </body>
 </html>

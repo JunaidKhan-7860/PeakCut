@@ -46,22 +46,25 @@ funny moments, fails, clutch plays, rage, shock, hot takes, or a short story wit
 LIVE_NOTE = """
 This is a LIVE stream and the transcript is only the last few minutes, ending at {now:.0f} seconds.
 If a moment is still unfolding at the very end, leave it out; you will see it again in the next check.
+Every selected clip MUST have complete standalone sense for a stranger:
+- Always start cleanly on the premise or setup line so anyone watching understands the situation immediately.
+- Always end with a clear punchline, payoff, or reaction, ending on the final word of the sentence (never cut off mid-thought).
 Most checks should return []. Only return a moment you would stop scrolling for.
 """
 
 RULES = """
 Rules:
 - Each clip is {min_len} to {max_len} seconds. Use the [seconds] values for start and end.
-- Start on the setup line, not mid-sentence. End right after the payoff or reaction, on the last word of a
-  complete sentence: never in the middle of a sentence or a thought. The clip must make sense on its own.
+- Standalone Context: Start on the setup line, not mid-sentence or after the event started. End right after the payoff or reaction, on the last word of a
+  complete sentence: never in the middle of a sentence or a thought. The clip must make complete sense on its own.
 - Do not pick intros, sponsor reads, "like and subscribe", or dead air.
 - Skip weak moments. Fewer strong clips beat many weak ones. Return [] if nothing is worth clipping.
 - score: 0-100, how likely a stranger keeps watching. Be honest; most clips are 50-80.
-- hook: at most 5 words, ALL CAPS, shown as big text on the video. Curiosity, but true to what happens.
-- title: at most 70 characters, for the post.
-- description: one or two sentences.
+- hook: at most 5 words, ALL CAPS, high curiosity gap that forces viewers to stop scrolling, ending with a punchy emoji (🔥, 💀, 😱, 😭, 👀). Examples: "WAIT FOR IT 💀", "HE REALLY SAID THIS?! 😭", "INSTANT REGRET 😳", "NO WAY HE SURVIVED 🔥", "CHAT WAS NOT READY 👀".
+- title: at most 70 characters. Use psychological triggers (Curiosity Gap, Question Hook, Extreme Disbelief).
+- description: one or two high-energy sentences with context and a call to subscribe/follow.
 - hashtags: 5 tags without the # sign.
-- highlight_words: 3 to 6 single words spoken in the clip that carry the punch.
+- highlight_words: 3 to 6 single high-emotion words spoken in the clip that carry the punch and get kinetic pop highlights.
 - Write hook, title, description, hashtags and highlight_words in English. If the video is in Hindi or Urdu,
   you may write them the way people type Hindi and Urdu in Roman letters (Hinglish: "yaar ye kya hai"), never
   in Devanagari or Urdu script. For any other language, write them in English.
@@ -370,6 +373,10 @@ Channel: {uploader}
 The transcript covers seconds {start:.0f} to {now:.0f}. If a moment is still unfolding at the very end, leave it out;
 you will see it again in the next check.
 {must}
+CRITICAL REQUIREMENT FOR STANDALONE LIVE CLIPS:
+Every selected clip MUST make complete sense on its own for someone who has never seen the stream:
+- The clip MUST start right at the premise or setup line (e.g. explaining what is about to happen, a bet, an intent, a confrontation, or a joke premise).
+- The clip MUST end cleanly on the punchline, resolution, or reaction, ending on the final word of the sentence. Never cut off mid-thought or mid-sentence.
 Pick up to {n} moments that would work as standalone clips for someone who has never seen the stream:
 funny moments, fails, clutch plays, rage, shock, hot takes, or a short story with a payoff.
 """
