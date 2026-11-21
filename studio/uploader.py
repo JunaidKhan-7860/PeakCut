@@ -532,12 +532,13 @@ def upload_to_instagram_reel(
         if r.status_code != 200:
             logger.error(f"Failed to create Instagram container: {r.text}")
             return None
-        container_id = r.json().get("id")
+        init_data = r.json()
+        container_id = init_data.get("id")
+        rupload_url = init_data.get("uri") or f"https://rupload.facebook.com/ig-api-upload/v27.0/{container_id}"
 
         # If uploading a local file, stream to Meta's rupload endpoint
         if video_path:
             logger.info(f"Uploading local file to Instagram rupload endpoint ({video_path.name})...")
-            rupload_url = f"https://rupload.facebook.com/ig-api-upload/v21.0/{container_id}"
             file_size = str(video_path.stat().st_size)
             with video_path.open("rb") as f:
                 up_res = client.post(
@@ -546,7 +547,8 @@ def upload_to_instagram_reel(
                     headers={
                         "Authorization": f"OAuth {token}",
                         "offset": "0",
-                        "file_size": file_size
+                        "file_size": file_size,
+                        "Content-Type": "application/octet-stream"
                     },
                     timeout=900
                 )

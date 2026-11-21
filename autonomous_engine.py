@@ -190,23 +190,15 @@ def build_viral_metadata(target: dict, clip: dict, vod_title: str) -> tuple:
 
     desc = f"""{clip.get('description', hook)} Drop a comment below if you saw that coming! 👇
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 ORIGINAL CREATOR ATTRIBUTION:
-• Original Creator: @{c_name}
-• Stream / Highlight: {vod_title}
-• Official Campaign: {campaign}
+Credit: @{c_name}
 """
     if credit_line:
-        desc += f"• Creator Link: {credit_line}\n"
+        desc += f"Watch: {credit_line}\n"
     else:
-        desc += f"• Support the creator: Check out @{c_name}'s official streams!\n"
+        desc += f"Original Streamer: @{c_name}\n"
 
     desc += f"""
-All rights and copyright belong to @{c_name} and original creators. Featured under authorized campaign guidelines.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎮 Channel: Gamingclip (@gamingclip-f1l)
-Subscribe for daily viral gaming moments, streamer reactions, and best plays!
+🎮 Follow for daily viral gaming moments, crazy streamer reactions & best plays!
 
 #{tag} #Shorts #Gaming #GTA6 #Viral #FYP #StreamerMoments #GamingClips
 """
