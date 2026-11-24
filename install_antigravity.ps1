@@ -35,7 +35,7 @@ Write-Host "[3/5] Installing requirements (FastAPI, yt-dlp, Whisper, Pillow)..."
 Write-Host "      Dependencies installed." -ForegroundColor Green
 
 # 4. Check Environment Config
-Write-Host "[4/5] Checking configuration..." -ForegroundColor White
+Write-Host "[4/5] Checking configuration & Antigravity integration..." -ForegroundColor White
 if (-not (Test-Path "$workDir\.env")) {
     if (Test-Path "$workDir\.env.example") {
         Copy-Item "$workDir\.env.example" "$workDir\.env"
@@ -43,6 +43,25 @@ if (-not (Test-Path "$workDir\.env")) {
     }
 } else {
     Write-Host "      Configuration .env found." -ForegroundColor Green
+}
+
+# Optional: Register global skill in Antigravity config directory if present
+$targetSkillDirs = @(
+    "$env:USERPROFILE\.gemini\config\skills\peakcut",
+    "$env:USERPROFILE\.gemini\antigravity\skills\peakcut"
+)
+foreach ($targetDir in $targetSkillDirs) {
+    $parentDir = Split-Path $targetDir
+    if (Test-Path $parentDir) {
+        try {
+            if (-not (Test-Path $targetDir)) {
+                New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+            }
+            Copy-Item -Path "$workDir\.agents\skills\peakcut\*" -Destination $targetDir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "      Linked PeakCut skill into Antigravity ($targetDir)!" -ForegroundColor Green
+            break
+        } catch {}
+    }
 }
 
 # 5. Launch PeakCut Studio

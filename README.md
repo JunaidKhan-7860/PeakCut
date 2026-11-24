@@ -77,11 +77,35 @@ Simply double-click:
 ```bash
 start.bat
 ```
+*(Or double-click `install.bat` if running for the first time)*
+
 Or execute in PowerShell:
 ```powershell
 .\launch.ps1
 ```
 This automatically starts Ollama, spins up the PeakCut FastAPI server, initializes the background autonomous engine, and opens your browser to `http://127.0.0.1:8765/dashboard`.
+
+---
+
+## 🤖 Google Antigravity Integration (Zero-Config)
+
+PeakCut features native **Google Antigravity Agent** integration (`.agents/skills/peakcut` and `GEMINI.md`).
+
+### How to use it in Google Antigravity:
+1. **Open Google Antigravity** and clone/open this repository:
+   ```bash
+   git clone https://github.com/Junaidkhan7230/PeakCut.git
+   ```
+2. **Open the `PeakCut` folder** as your workspace in Antigravity.
+   * Antigravity automatically discovers the built-in skill (`.agents/skills/peakcut/SKILL.md`) and project guidelines (`GEMINI.md`).
+3. **Just prompt Antigravity in plain English**:
+   * *"Start PeakCut"* or *"Install and run PeakCut"*
+   * *"Open my clipping dashboard"*
+   * *"Clip this YouTube stream: <URL>"*
+   * *"Check status of staged clips"*
+   * *"Stop PeakCut and free up GPU"*
+
+Antigravity executes the setup and launch scripts automatically, detects your hardware, and keeps you updated right inside your chat!
 
 ---
 
