@@ -16,6 +16,17 @@ if ($pyProcesses) {
     Write-Host "[INFO] PeakCut Studio Server was not running." -ForegroundColor White
 }
 
+# Stop PeakCut Autonomous Engine
+$engineProcesses = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*autonomous_engine.py*" }
+if ($engineProcesses) {
+    foreach ($p in $engineProcesses) {
+        Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "[OK] PeakCut Autonomous Engine stopped." -ForegroundColor Green
+} else {
+    Write-Host "[INFO] PeakCut Autonomous Engine was not running." -ForegroundColor White
+}
+
 # Stop Ollama if running
 $ollamaProcesses = Get-Process -Name "*ollama*" -ErrorAction SilentlyContinue
 if ($ollamaProcesses) {

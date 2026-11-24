@@ -108,9 +108,9 @@ _by_user: dict = {}                       # user -> {job id: job}: listing one p
 _lock = threading.RLock()
 on_clip_ready: list = []   # callbacks (job, clip), run once when a clip first finishes
 
-DEFAULTS = {"max_clips": 6, "min_len": 15, "max_len": 60, "style": "bounce", "layout": "blur", "quality": 720,
+DEFAULTS = {"max_clips": 6, "min_len": 15, "max_len": 60, "style": "bounce", "layout": "blur", "quality": 1080,
             "range_start": None, "range_end": None, "captions": True, "music": "none", "music_vol": 0.18, "corner_tag": "",
-            "progress_bar": True, "punch_zoom": True, "teaser_hook": False, "teaser_text": "WAIT FOR IT... 👀", "teaser_dur": 2.2,
+            "progress_bar": True, "punch_zoom": True, "teaser_hook": False, "teaser_text": "WAIT FOR IT... 👀", "teaser_dur": 1.4,
             "hook_text": "", "description_text": "", "lang": "en"}
 
 
@@ -143,9 +143,9 @@ def clean_options(options) -> dict:
             continue
         elif k == "teaser_dur":
             try:
-                out[k] = max(1.0, min(5.0, float(v)))
+                out[k] = max(0.8, min(5.0, float(v)))
             except (ValueError, TypeError):
-                out[k] = 2.2
+                out[k] = 1.4
             continue
         elif k == "lang":
             v = v if fetch_model.known(v) else DEFAULTS["lang"]
@@ -440,9 +440,9 @@ def request_render(jid, cid, changes: dict):
         new["teaser_text"] = str(changes["teaser_text"])[:60]
     if "teaser_dur" in changes:
         try:
-            new["teaser_dur"] = max(1.0, min(5.0, float(changes["teaser_dur"])))
+            new["teaser_dur"] = max(0.8, min(5.0, float(changes["teaser_dur"])))
         except (ValueError, TypeError):
-            new["teaser_dur"] = 2.2
+            new["teaser_dur"] = 1.4
     if "teaser_start" in changes and changes["teaser_start"] is not None:
         try:
             new["teaser_start"] = max(0.0, float(changes["teaser_start"]))
@@ -541,7 +541,12 @@ def render_one(job, clip, words):
             c_data = creators.get(job["creator"])
             if c_data and c_data.get("corner_tag"):
                 clip["corner_tag"] = c_data["corner_tag"]
+        if not clip.get("facecam") and job.get("facecam"):
+            clip["facecam"] = job["facecam"]
+            if clip.get("layout") in ("auto", "crop", "blur"):
+                clip["layout"] = "stacked"
         local = dict(clip, start=clip["start"] - off, end=clip["end"] - off, hook=roman.to_roman(clip.get("hook") or ""))
+        local["target_creator"] = job.get("creator") or job.get("uploader") or ""
         near = _caption_words(job, clip, words, off) if clip.get("captions", True) else []
         out = render.render_clip(src, d / "clips", clip["id"], local, near, job["width"], job["height"])
         clip.update(out, status="done", version=clip.get("version", 0) + 1, error=None)
@@ -667,6 +672,19 @@ def _fetch_piece(job, clip, full_audio):
         clip["start"], clip["end"] = max(clip["start"], clip["src_offset"]), min(clip["end"], clip["src_end"])
         job.setdefault("width", meta["width"])
         job.setdefault("height", meta["height"])
+        if not job.get("facecam"):
+            try:
+                from . import facecam
+                c_name = job.get("creator") or job.get("title") or ""
+                detected = facecam.detect(piece, creator=c_name)
+                if detected:
+                    job["facecam"] = [detected["x"], detected["y"], detected["w"], detected["h"]]
+            except Exception:
+                pass
+        if job.get("facecam"):
+            clip["facecam"] = job["facecam"]
+            if clip.get("layout") in ("auto", "crop", "blur"):
+                clip["layout"] = "stacked"
     except Exception as e:  # noqa: BLE001
         clip.update(status="error", error=f"Could not fetch this part of the video: {safe.friendly(e, 250)}")
 
@@ -692,12 +710,17 @@ def _facecam(job) -> list | None:
     what it says is measured again on the picture, so it cannot do any harm."""
     path = job.get("source_path")
     if not path or not Path(path).is_file():
-        return None
+        p = Path(job.get("dir", "")) / "source.mp4"
+        if p.is_file():
+            path = str(p)
+        else:
+            return None
     try:
-        box = facecam.detect(path, ask=brain.look_for_facecam)
+        c_name = job.get("creator") or job.get("uploader") or job.get("title") or ""
+        box = facecam.detect(path, ask=brain.look_for_facecam, creator=c_name)
     except Exception:  # noqa: BLE001 - a missing facecam is not a failure
         return None
-    if not box or box.get("conf") != "high":
+    if not box or box.get("conf") not in ("high", "med", "medium"):
         return None
     job["facecam"] = [box["x"], box["y"], box["w"], box["h"]]
     return job["facecam"]
@@ -940,19 +963,22 @@ def _run_job(job):
                      corner_tag=o.get("corner_tag", ""), music=o.get("music", "none"), music_vol=o.get("music_vol", 0.18),
                      progress_bar=o.get("progress_bar", True), punch_zoom=o.get("punch_zoom", True),
                      teaser_hook=o.get("teaser_hook", False), teaser_text=o.get("teaser_text", "WAIT FOR IT... 👀"),
-                     teaser_dur=o.get("teaser_dur", 2.2))
+                     teaser_dur=o.get("teaser_dur", 1.4))
             if o.get("hook_text"):        # the person's own big text, on every clip, in place of the AI's
                 c["hook"] = o["hook_text"]
             if o.get("description_text"):  # ...and their own description, exactly as written
                 c["description"], c["fixed_description"] = o["description_text"], True
             else:                          # no description of their own: 3 to 5 fitting hashtags go at the end of the AI's
                 hashtags.apply(c, words, job["title"], job["uploader"], game)
-            # Only the gameplay layout uses a webcam, so it is only looked for then, and only once: a
-            # stream with no webcam is not looked for again on every clip of it.
-            if o["layout"] == "gameplay" and face is False:
+            # When gameplay, stacked, or auto is chosen, detect webcam once for the job
+            if o["layout"] in ("gameplay", "stacked", "streamer", "auto") and face is False:
                 face = _facecam(job)
             if face:
                 c["facecam"] = face
+                if o["layout"] == "auto":
+                    c["layout"] = "stacked"
+            elif o["layout"] == "auto":
+                c["layout"] = "auto"
             job["clips"].append(c)
             futures.append((renders.submit(ctx.bind(make), c, list(words)), c))
         job["ai"] = {"model": model, "tokens": tokens, "note": "", "log": notes[-5:]}

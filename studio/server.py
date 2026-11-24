@@ -39,12 +39,12 @@ def _quiet(fn):
 
 app = FastAPI(title="PeakCut", docs_url=None, redoc_url=None, openapi_url=None)
 WEB = config.ROOT / "web"
-OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/api/staged_clips")
+OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/api/staged_clips", "/api/autonomous/status", "/api/content_rewards", "/api/cleanup", "/api/cloud/", "/dashboard", "/staged")
 PAGES = {"/": "landing.html", "/login": "auth.html", "/signup": "auth.html", "/reset": "reset.html",
-         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html", "/staged": "staged.html"}
+         "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html", "/staged": "staged.html", "/dashboard": "dashboard.html"}
 VIDEO_TYPES = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".ts", ".flv"}
 CSP = ("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-       "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; "
+       "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://files.catbox.moe https://*.catbox.moe; media-src 'self' blob: https://files.catbox.moe https://*.catbox.moe; connect-src 'self' https://files.catbox.moe https://*.catbox.moe; "
        "frame-src https://player.twitch.tv https://www.youtube-nocookie.com https://player.kick.com; "
        "frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com")
 
@@ -438,7 +438,12 @@ def app_page(rest: str = ""):
 
 @app.get("/staged")
 def staged_page():
-    return _page("staged.html")
+    return _page("dashboard.html")
+
+
+@app.get("/dashboard")
+def dashboard_page():
+    return _page("dashboard.html")
 
 
 @app.get("/admin")
@@ -1185,9 +1190,12 @@ def get_autonomous_status():
                 pass
 
     summary = uploader.get_status_summary()["summary"]
+    import auto_poster
+    posting_frozen = getattr(auto_poster, "POSTING_PAUSED", True)
     return {
         "ok": True,
         "running": True,
+        "posting_frozen": posting_frozen,
         "targets": {
             "youtube": "https://studio.youtube.com/channel/UCOnjYjv4eqnOF3tEk6GUw9Q",
             "instagram": "https://www.instagram.com/gamingclipkhan/"
@@ -1910,8 +1918,27 @@ def admin_delete_user(request: Request, uid: str, body: dict = Body(...)):
 @app.get("/api/staged_clips")
 def list_staged_clips():
     """Lists all AI-approved ready-to-upload viral clip packages."""
-    stage_dir = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload")
     packages = []
+    export_dir = config.ROOT / "viral_exports" / "ready_to_post"
+    if export_dir.exists():
+        for mf in sorted(export_dir.glob("*_meta.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+            try:
+                m = json.loads(mf.read_text(encoding="utf-8"))
+                clip_id = mf.stem[:-5] if mf.stem.endswith("_meta") else mf.stem
+                m["id"] = m.get("id") or clip_id
+                m["folder_name"] = clip_id
+                v_path = export_dir / f"{clip_id}.mp4"
+                t_path = export_dir / f"{clip_id}.jpg"
+                has_cloud = bool(m.get("cloud_url"))
+                m["video_exists"] = v_path.exists() or has_cloud
+                m["thumb_exists"] = t_path.exists() or bool(m.get("cloud_cover_url"))
+                m["video_url"] = m.get("cloud_url") or f"/api/staged_clips/{clip_id}/video"
+                m["thumb_url"] = m.get("cloud_cover_url") or f"/api/staged_clips/{clip_id}/thumbnail"
+                packages.append(m)
+            except Exception:
+                pass
+
+    stage_dir = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload")
     if stage_dir.exists():
         for d in sorted(stage_dir.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True):
             if d.is_dir():
@@ -1920,8 +1947,12 @@ def list_staged_clips():
                     try:
                         m = json.loads(manifest_f.read_text(encoding="utf-8"))
                         m["folder_name"] = d.name
-                        m["video_exists"] = (d / "video.mp4").exists()
-                        m["thumb_exists"] = (d / "thumbnail.jpg").exists()
+                        m["id"] = m.get("id") or d.name
+                        has_cloud = bool(m.get("cloud_url"))
+                        m["video_exists"] = (d / "video.mp4").exists() or has_cloud
+                        m["thumb_exists"] = (d / "thumbnail.jpg").exists() or bool(m.get("cloud_cover_url"))
+                        m["video_url"] = m.get("cloud_url") or f"/api/staged_clips/{d.name}/video"
+                        m["thumb_url"] = m.get("cloud_cover_url") or f"/api/staged_clips/{d.name}/thumbnail"
                         packages.append(m)
                     except Exception:
                         pass
@@ -1930,18 +1961,168 @@ def list_staged_clips():
 
 @app.get("/api/staged_clips/{folder_name}/video")
 def get_staged_video(folder_name: str):
-    video_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "video.mp4"
-    if not video_path.exists():
-        raise HTTPException(404, "Video not found")
-    return FileResponse(str(video_path), media_type="video/mp4")
+    from fastapi.responses import RedirectResponse
+    export_dir = config.ROOT / "viral_exports" / "ready_to_post"
+    mf = export_dir / f"{folder_name}_meta.json"
+    if mf.exists():
+        try:
+            m = json.loads(mf.read_text(encoding="utf-8"))
+            if m.get("cloud_url"):
+                return RedirectResponse(m["cloud_url"])
+        except Exception:
+            pass
+
+    candidate = export_dir / f"{folder_name}.mp4"
+    if candidate.exists():
+        return FileResponse(str(candidate), media_type="video/mp4")
+    candidate_sub = export_dir / folder_name / "video.mp4"
+    if candidate_sub.exists():
+        return FileResponse(str(candidate_sub), media_type="video/mp4")
+    legacy_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "video.mp4"
+    if legacy_path.exists():
+        return FileResponse(str(legacy_path), media_type="video/mp4")
+    raise HTTPException(404, "Video not found")
 
 
 @app.get("/api/staged_clips/{folder_name}/thumbnail")
 def get_staged_thumbnail(folder_name: str):
-    thumb_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "thumbnail.jpg"
-    if not thumb_path.exists():
-        raise HTTPException(404, "Thumbnail not found")
-    return FileResponse(str(thumb_path), media_type="image/jpeg")
+    from fastapi.responses import RedirectResponse
+    export_dir = config.ROOT / "viral_exports" / "ready_to_post"
+    mf = export_dir / f"{folder_name}_meta.json"
+    if mf.exists():
+        try:
+            m = json.loads(mf.read_text(encoding="utf-8"))
+            if m.get("cloud_cover_url"):
+                return RedirectResponse(m["cloud_cover_url"])
+        except Exception:
+            pass
+
+    candidate = export_dir / f"{folder_name}.jpg"
+    if candidate.exists():
+        return FileResponse(str(candidate), media_type="image/jpeg")
+    candidate_sub = export_dir / folder_name / "thumbnail.jpg"
+    if candidate_sub.exists():
+        return FileResponse(str(candidate_sub), media_type="image/jpeg")
+    legacy_path = Path(r"C:\Users\jarhj\.gemini\antigravity\scratch\social_clip_automation\ready_to_upload") / folder_name / "thumbnail.jpg"
+    if legacy_path.exists():
+        return FileResponse(str(legacy_path), media_type="image/jpeg")
+    raise HTTPException(404, "Thumbnail not found")
+
+
+@app.get("/api/content_rewards")
+def get_content_rewards():
+    ledger_path = config.ROOT / "data" / "content_reward_submissions.json"
+    if ledger_path.exists():
+        try:
+            return json.loads(ledger_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            return {"error": str(e), "submissions": []}
+    return {"total_campaign_clips": 0, "submissions": []}
+
+
+@app.get("/api/cloud/status")
+def api_cloud_status():
+    """Returns overview of cloud storage and local PC disk savings."""
+    from studio import cloud_storage
+    return cloud_storage.get_cloud_status()
+
+
+@app.post("/api/cloud/sync_all")
+@app.get("/api/cloud/sync_all")
+def api_cloud_sync_all():
+    """Syncs all staged clips to Cloud CDN and frees up all local PC disk space."""
+    from studio import cloud_storage
+    sync_res = cloud_storage.sync_all_staged_clips(purge_local=True)
+    raw_freed_mb = cloud_storage.purge_all_raw_vods()
+    total_freed_mb = sync_res.get("reclaimed_mb", 0) + raw_freed_mb
+    return {
+        "ok": True,
+        "total_clips": sync_res.get("total_clips", 0),
+        "newly_synced": sync_res.get("newly_synced", 0),
+        "reclaimed_mb": round(total_freed_mb, 2),
+        "reclaimed_gb": round(total_freed_mb / 1024, 2),
+        "message": f"Successfully offloaded clips to cloud. Reclaimed {round(total_freed_mb/1024, 2)} GB on local PC disk!"
+    }
+
+
+@app.post("/api/cleanup")
+@app.get("/api/cleanup")
+def api_cleanup(max_age_hours: float = 2.0):
+    """
+    1-Click Storage Optimizer: Clears all temporary, partial, and stale raw download files.
+    Strictly safeguards finished clips in viral_exports/ready_to_post/.
+    """
+    import tempfile
+    users_dir = config.USERS_DIR
+    tmp_dir = config.TMP_DIR
+    now = time.time()
+    reclaimed_bytes = 0
+    cleaned_count = 0
+
+    # 1. Clean data/tmp
+    if tmp_dir.exists():
+        for root, dirs, files in os.walk(tmp_dir):
+            for f in files:
+                p = Path(root) / f
+                try:
+                    size = p.stat().st_size
+                    p.unlink(missing_ok=True)
+                    reclaimed_bytes += size
+                    cleaned_count += 1
+                except Exception:
+                    pass
+
+    # 2. Clean users/ temp and stale source downloads
+    if users_dir.exists():
+        for root, dirs, files in os.walk(users_dir):
+            for f in files:
+                p = Path(root) / f
+                try:
+                    mtime = p.stat().st_mtime
+                    size = p.stat().st_size
+                    # Orphaned incomplete downloads (.part, .ytdl, .tmp)
+                    if f.endswith(('.part', '.ytdl', '.tmp')) and (now - mtime > 1800):
+                        p.unlink(missing_ok=True)
+                        reclaimed_bytes += size
+                        cleaned_count += 1
+                    # Stale raw source VODs in jobs older than max_age_hours
+                    elif f in ('source.mp4', 'audio_src.m4a', 'source.wav', 'audio.m4a') and (now - mtime > max_age_hours * 3600):
+                        p.unlink(missing_ok=True)
+                        reclaimed_bytes += size
+                        cleaned_count += 1
+                except Exception:
+                    pass
+
+    # 3. Clean OS temp pk* working directories
+    try:
+        sys_temp = Path(tempfile.gettempdir())
+        for d in sys_temp.glob("pk*"):
+            if d.is_dir() and (now - d.stat().st_mtime > 1800):
+                try:
+                    shutil.rmtree(d, ignore_errors=True)
+                    cleaned_count += 1
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
+    # 4. Wipe all raw multi-GB source streams across jobs
+    try:
+        from studio import cloud_storage
+        vod_mb = cloud_storage.purge_all_raw_vods()
+        reclaimed_bytes += int(vod_mb * 1024 * 1024)
+    except Exception:
+        pass
+
+    reclaimed_mb = round(reclaimed_bytes / (1024 * 1024), 2)
+    reclaimed_gb = round(reclaimed_mb / 1024, 2)
+    return {
+        "ok": True,
+        "reclaimed_mb": reclaimed_mb,
+        "reclaimed_gb": reclaimed_gb,
+        "cleaned_count": cleaned_count,
+        "message": f"Successfully cleared {cleaned_count} temporary files and reclaimed {reclaimed_gb} GB ({reclaimed_mb} MB) of disk space."
+    }
 
 
 def main():

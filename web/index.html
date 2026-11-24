@@ -603,15 +603,262 @@ a.lnk{color:var(--brand-ink);text-decoration:none;font-weight:600}
 
 /* ---------- dialogs + toasts */
 dialog{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:var(--r-lg);padding:0;max-width:calc(100vw - 32px)}
-dialog::backdrop{background:rgba(14,12,11,.42);animation:fadein .16s ease}
+dialog::backdrop{background:rgba(10,12,18,.75);backdrop-filter:blur(6px);animation:fadein .16s ease}
 .dlg{padding:24px;width:450px;max-width:100%;display:flex;flex-direction:column;gap:14px}
 .dlg h2{font-size:18px;font-weight:600;color:var(--brand-ink)}
 .dlg-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
-.editor{display:grid;grid-template-columns:minmax(240px,340px) minmax(300px,450px);max-height:calc(100vh - 48px)}
-.editor .stage{background:#17110E;display:grid;place-items:center;position:relative;min-height:320px}
-.editor video,.editor .stage img{width:100%;max-height:calc(100vh - 48px);aspect-ratio:9/16;object-fit:contain;display:block}
-.editor .panel{padding:22px;overflow:auto;display:flex;flex-direction:column;gap:14px}
-.editor h3{font-size:13px;font-weight:600;color:var(--dim);margin-top:6px}
+
+/* ---------- Pro Studio Clip Editor Modal */
+dialog#clipdlg{
+  border:1px solid rgba(255,255,255,0.12);
+  background:#0c0f17;
+  color:#f1f5fa;
+  border-radius:20px;
+  padding:0;
+  width:1180px;
+  max-width:min(1180px, calc(100vw - 32px));
+  box-shadow:0 30px 90px rgba(0,0,0,0.85);
+  overflow:hidden;
+}
+.editor{
+  display:grid;
+  grid-template-columns:440px 1fr;
+  height:88vh;
+  max-height:88vh;
+  overflow:hidden;
+  background:#0c0f17;
+}
+.editor .stage{
+  background:radial-gradient(circle at 50% 25%, #182236 0%, #090c14 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:20px 24px;
+  border-right:1px solid rgba(255,255,255,0.08);
+  user-select:none;
+}
+.editor .phone-frame{
+  width:100%;
+  max-width:310px;
+  height:560px;
+  max-height:72vh;
+  aspect-ratio:9/16;
+  background:#000;
+  border-radius:36px;
+  border:3px solid #232c3f;
+  box-shadow:0 20px 50px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.editor .phone-notch{
+  position:absolute;
+  top:8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:88px;
+  height:18px;
+  background:#141924;
+  border-radius:10px;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  pointer-events:none;
+}
+.editor .phone-notch-dot{width:6px;height:6px;border-radius:50%;background:#090d16}
+.editor .phone-notch-speaker{width:32px;height:3px;border-radius:3px;background:#20283a}
+.editor .phone-overlay-badge{
+  position:absolute;
+  top:34px;
+  left:14px;
+  background:rgba(0,0,0,0.65);
+  backdrop-filter:blur(6px);
+  color:#38bdf8;
+  font-size:10px;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:6px;
+  border:1px solid rgba(56,189,248,0.3);
+  z-index:9;
+  letter-spacing:0.5px;
+  pointer-events:none;
+}
+.editor .phone-video-wrap{
+  width:100%;
+  height:100%;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#000;
+}
+.editor video,.editor .stage img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.editor .stage-hint{
+  margin-top:14px;
+  font-size:12px;
+  color:#8c99b2;
+  text-align:center;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.editor .panel{
+  padding:22px 28px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  background:#0e121b;
+  color:#f1f5fa;
+}
+.editor .panel::-webkit-scrollbar{width:8px}
+.editor .panel::-webkit-scrollbar-thumb{background:#222c3f;border-radius:999px;border:none}
+.editor .panel-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding-bottom:14px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.editor .badge-cluster{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.editor .badge-cluster .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;letter-spacing:0.3px}
+.editor .safe-badge{background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.35)}
+.editor .panel-sub{font-size:12.5px;color:#94a3b8;margin-top:6px;line-height:1.4}
+.editor .close-btn{
+  background:rgba(255,255,255,0.06);
+  color:#cbd5e1;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.editor .close-btn:hover{background:rgba(239,68,68,0.2);color:#ef4444;border-color:rgba(239,68,68,0.3)}
+
+/* Editor Segmented Navigation Tabs */
+.ed-nav-tabs{
+  display:flex;
+  gap:4px;
+  background:#141926;
+  padding:4px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.07);
+}
+.ed-tab-btn{
+  flex:1;
+  padding:8px 10px;
+  border-radius:7px;
+  border:0;
+  background:transparent;
+  color:#8e9ab2;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  white-space:nowrap;
+  text-align:center;
+  transition:all .15s ease;
+}
+.ed-tab-btn:hover{color:#f1f5fa;background:rgba(255,255,255,0.05)}
+.ed-tab-btn.active{background:#232d42;color:#38bdf8;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+
+/* Tab Sections */
+.ed-sec{
+  display:none;
+  flex-direction:column;
+  gap:12px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;
+  padding:16px;
+  animation:fadein .2s ease;
+}
+.ed-sec.active{display:flex}
+.ed-sec-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+  color:#f1f5fa;
+  margin-bottom:4px;
+}
+.ed-sec-sub{font-size:11px;color:#8590a6}
+
+/* Preset buttons */
+.preset-pills{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0}
+.preset-pill{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  color:#cbd5e1;
+  font-size:11px;
+  padding:4px 9px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.preset-pill:hover{background:rgba(56,189,248,0.15);color:#38bdf8;border-color:rgba(56,189,248,0.3)}
+
+/* Action Footer */
+.ed-footer-action{
+  position:sticky;
+  bottom:0;
+  background:#0e121b;
+  padding-top:12px;
+  margin-top:auto;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.btn-remake-cta{
+  width:100%;
+  height:44px;
+  font-size:14px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  background:linear-gradient(135deg, #FF8B33 0%, #ea580c 100%);
+  color:#fff;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(242,122,31,0.35);
+  transition:all .2s ease;
+}
+.btn-remake-cta:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 24px rgba(242,122,31,0.5);
+}
+.ed-safe-notice{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-size:11.5px;
+  color:#10b981;
+  background:rgba(16,185,129,0.08);
+  padding:6px 12px;
+  border-radius:6px;
+  border:1px solid rgba(16,185,129,0.2);
+}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:50}
 .toast{background:var(--frame);color:var(--frame-text);border:1px solid var(--frame-2);border-radius:var(--r);padding:12px 16px;max-width:380px;animation:rise .2s ease;display:flex;gap:10px;align-items:center;font-weight:500}
@@ -759,7 +1006,7 @@ dialog[open]{animation:fadein .16s ease}
   .topbar{padding:10px 16px;min-height:52px}
   .hero{padding:32px 16px 40px}
   .content{padding:20px 16px 56px}
-  .editor{grid-template-columns:1fr;overflow:auto}.editor video{max-height:52vh}
+  .editor{grid-template-columns:1fr;height:auto;max-height:92vh;overflow-y:auto}.editor .stage{border-right:0;border-bottom:1px solid rgba(255,255,255,0.08);padding:14px}.editor .phone-frame{max-height:45vh;width:260px}
 }
 @media (max-width:560px){.composer-bar .btn.primary{width:100%;height:42px}.topbar #actions .btn{height:34px;padding:0 10px;font-size:13px}.topbar h1{font-size:17px}.hero{padding:40px 14px 28px}.hero h2{font-size:26px}.hint{display:none}.tiles{gap:10px}.tile{padding:14px}.two{grid-template-columns:1fr}}
 /* ---------- guided tour: dims the page, cuts a soft-moving hole around what each step talks about */
@@ -2258,6 +2505,12 @@ async function saveSettings() { const d = {}; $$("#sform [data-s]").forEach(i =>
 
 /* ============================================================ clip editor */
 function openClip(jid, cid) { D.jid = jid; D.cid = cid; D.sig = ""; drawClipDlg(true); $("#clipdlg").showModal(); }
+function switchEdTab(targetId, btn) {
+  const dlg = $("#clipdlg");
+  if (!dlg) return;
+  dlg.querySelectorAll(".ed-tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  dlg.querySelectorAll(".ed-sec").forEach(s => s.classList.toggle("active", s.id === targetId));
+}
 function drawClipDlg(full) {
   const j = jobOf(D.jid), c = j?.clips.find(x => x.id === D.cid), dlg = $("#clipdlg");
   if (!c) { if (dlg.open) dlg.close(); return; }
@@ -2266,30 +2519,75 @@ function drawClipDlg(full) {
     : c.status === "error" ? `<div class="err" style="padding:20px;text-align:center">${esc(c.error || "Could not make this clip.")}</div>`
     : `<span class="making">${c.status === "rendering" ? "Making this clip…" : "Waiting its turn…"}</span>`;
   if (full) {
-    dlg.innerHTML = `<div class="editor"><div class="stage" id="stage">${stage}</div>
+    dlg.innerHTML = `<div class="editor">
+      <!-- STAGE / PHONE FRAME -->
+      <div class="stage" id="stage">
+        <div class="phone-frame">
+          <div class="phone-notch">
+            <span class="phone-notch-dot"></span>
+            <span class="phone-notch-speaker"></span>
+          </div>
+          <div class="phone-overlay-badge">9:16 HD PREVIEW</div>
+          <div class="phone-video-wrap" id="stage-video-box">${stage}</div>
+        </div>
+        <div class="stage-hint">
+          <span>💡</span> Space to play/pause · Preview refreshes on re-render
+        </div>
+      </div>
+
+      <!-- CONTROLS PANEL -->
       <div class="panel">
-        <div class="job-head" style="margin:0"><div><span class="badge ${scoreCls(c.score)}" style="position:static">${c.judges ? "Words " + c.judges.words + (c.judges.reaction ? " · Reaction " + c.judges.reaction : "") : c.score ? "Score " + c.score : "Clipped by hand"}</span>
-          <p class="sub" style="margin-top:8px">${esc(c.reason || "")}</p></div><button class="btn icon ghost" data-act="closedlg" aria-label="Close">${ic("x")}</button></div>
+        <div class="panel-header">
+          <div style="flex:1;min-width:0">
+            <div class="badge-cluster">
+              <span class="badge ${scoreCls(c.score)}" style="position:static">
+                ${c.judges ? "Words " + c.judges.words + (c.judges.reaction ? " · Reaction " + c.judges.reaction : "") : c.score ? "🔥 Score " + c.score : "Clipped by Hand"}
+              </span>
+              <span class="badge" style="background:#1e293b;color:#94a3b8">⏱️ ${fmt(c.end - c.start)}</span>
+              <span class="badge safe-badge">🛡️ Safe Staged (No Auto-Post)</span>
+            </div>
+            <p class="panel-sub">${esc(c.reason || "High retention energy peak identified by PeakCut AI.")}</p>
+          </div>
+          <button class="close-btn" data-act="closedlg" aria-label="Close" title="Close editor">${ic("x")}</button>
+        </div>
+
         <!-- AI VIRAL POLISH -->
-        <div style="background:linear-gradient(135deg, rgba(245,158,11,0.1), rgba(168,85,247,0.1));padding:10px 14px;border-radius:12px;border:1px solid rgba(245,158,11,0.3);margin-top:8px">
+        <div style="background:linear-gradient(135deg, rgba(245,158,11,0.12), rgba(168,85,247,0.12));padding:12px 16px;border-radius:12px;border:1px solid rgba(245,158,11,0.3)">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <strong style="color:#f59e0b;font-size:13px">✨ AI Viral Polish</strong>
-              <div style="font-size:11px;color:var(--dim)">Generate 3 viral hooks, high-CTR titles & captions</div>
+              <strong style="color:#f59e0b;font-size:13px">✨ AI Viral Polish Engine</strong>
+              <div style="font-size:11px;color:#94a3b8">Instant 3 explosive hook headlines, high-CTR titles & captions</div>
             </div>
-            <button type="button" class="btn small" data-act="aipolish" id="btn-aipolish" style="height:30px;font-size:12px">${ic("bolt")}Re-Roll AI</button>
+            <button type="button" class="btn small" data-act="aipolish" id="btn-aipolish" style="height:30px;font-size:12px;background:#f59e0b;color:#0b0d13;font-weight:700;border:0">${ic("bolt")}Re-Roll AI</button>
           </div>
           <div id="ai-polish-results" style="display:none;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)"></div>
         </div>
 
-        <!-- SECTION 1: HOOK & VISUAL DYNAMICS -->
-        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <strong style="font-size:13px;color:var(--brand-ink)">🎯 1. Viral Hook & Visual Style</strong>
-            <span style="font-size:11px;color:var(--dim)">Top-Clipper Retention</span>
+        <!-- SEGMENTED NAVIGATION TABS -->
+        <div class="ed-nav-tabs">
+          <button type="button" class="ed-tab-btn active" onclick="switchEdTab('ed-tab-hook', this)">🎯 Hook & Style</button>
+          <button type="button" class="ed-tab-btn" onclick="switchEdTab('ed-tab-teaser', this)">⚡ Climax Teaser</button>
+          <button type="button" class="ed-tab-btn" onclick="switchEdTab('ed-tab-audio', this)">🎵 Audio & Music</button>
+          <button type="button" class="ed-tab-btn" onclick="switchEdTab('ed-tab-layout', this)">📐 Framing & Trim</button>
+          <button type="button" class="ed-tab-btn" onclick="switchEdTab('ed-tab-social', this)">📋 Post Copy</button>
+        </div>
+
+        <!-- TAB 1: HOOK & STYLE -->
+        <div id="ed-tab-hook" class="ed-sec active">
+          <div class="ed-sec-title">
+            <span>🎯 1. Big Hook Headline & Visual Captions</span>
+            <span class="ed-sec-sub">Stop-The-Scroll Hook</span>
           </div>
-          <label class="f">Big Hook Headline<input data-f="hook" value="${esc(c.hook)}" placeholder="e.g. WAIT TILL THE END 💀"></label>
-          <div class="two" style="margin:8px 0">
+          <label class="f">Big Hook Headline
+            <input data-f="hook" id="hook_input_field" value="${esc(c.hook)}" placeholder="e.g. WAIT TILL THE END 💀">
+          </label>
+          <div class="preset-pills">
+            <button type="button" class="preset-pill" onclick="$('#hook_input_field').value='WAIT TILL THE END 💀'">WAIT TILL THE END 💀</button>
+            <button type="button" class="preset-pill" onclick="$('#hook_input_field').value='THEY DID NOT EXPECT THIS 😱'">THEY DID NOT EXPECT THIS 😱</button>
+            <button type="button" class="preset-pill" onclick="$('#hook_input_field').value='WATCH WHAT HAPPENS NEXT 🔥'">WATCH WHAT HAPPENS NEXT 🔥</button>
+            <button type="button" class="preset-pill" onclick="$('#hook_input_field').value='HE ACTUALLY SAID THIS... 👀'">HE ACTUALLY SAID THIS... 👀</button>
+          </div>
+          <div class="two" style="margin:6px 0">
             <label class="sw"><input type="checkbox" data-f="punch_zoom" ${c.punch_zoom === false ? "" : "checked"}>🔍 Hook Punch Zoom (+15%)</label>
             <label class="sw"><input type="checkbox" data-f="progress_bar" ${c.progress_bar === false ? "" : "checked"}>📊 Retention Progress Bar</label>
           </div>
@@ -2300,30 +2598,37 @@ function drawClipDlg(full) {
             <label class="f">Caption Style<select data-f="style" data-caption-style ${c.captions === false ? "disabled" : ""}>${opts(S.status.styles, c.style)}</select></label>
             <label class="f">Hook Theme<select data-f="hook_theme">${opts(S.status.hook_themes || {white:"Classic White Pill", yellow:"MrBeast Yellow Pill", cyber:"Cyber Cyan Pill", dark:"Dark Mode Minimal", fire:"Hot Crimson Pill"}, c.hook_theme || "white")}</select></label>
           </div>
+          <details style="margin-top:6px;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 12px;border:1px solid rgba(255,255,255,0.08)">
+            <summary style="font-size:12px;font-weight:600;cursor:pointer;color:#94a3b8">✏️ Edit Caption Words (Fix Typos / Streamer Names)</summary>
+            <div style="margin-top:8px">
+              <textarea data-f="words_text" rows="3" placeholder="Caption words transcribed...">${esc(c.words_text || "")}</textarea>
+              <small class="help" style="margin-top:4px;color:#64748b">Fix any misheard words or streamer names here. They will appear in the re-rendered captions.</small>
+            </div>
+          </details>
         </div>
 
-        <!-- SECTION 1B: CLIMAX TEASER HOOK (FLASH-FORWARD TEASER) -->
-        <div style="background:linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.08));border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <!-- TAB 2: CLIMAX TEASER -->
+        <div id="ed-tab-teaser" class="ed-sec">
+          <div class="ed-sec-title">
             <label class="sw" style="font-weight:700;font-size:13px;color:#ef4444;cursor:pointer">
-              <input type="checkbox" data-f="teaser_hook" id="teaser_hook_chk" ${c.teaser_hook ? "checked" : ""} onchange="$('#teaser_hook_options').style.display = this.checked ? 'block' : 'none'">⚡ Climax Teaser Hook (Show peak moment first)
+              <input type="checkbox" data-f="teaser_hook" id="teaser_hook_chk" ${c.teaser_hook ? "checked" : ""} onchange="$('#teaser_hook_options').style.display = this.checked ? 'block' : 'none'">⚡ Climax Teaser Hook (Flash-Forward)
             </label>
-            <span style="font-size:11px;color:var(--dim)">Flash-Forward Hook</span>
+            <span class="ed-sec-sub">Peak Moment First</span>
           </div>
-          <p style="font-size:11.5px;color:var(--dim);margin:0 0 8px 0;line-height:1.4">
+          <p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0;line-height:1.4">
             Plays the peak climax or wildest moment for ~2s right at 00:00 with a teaser badge, then flash-cuts to the story from the beginning.
           </p>
           <div id="teaser_hook_options" style="${c.teaser_hook ? '' : 'display:none;'}padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
             <label class="f" style="margin-bottom:6px">Teaser Banner Text
               <input data-f="teaser_text" id="teaser_text_input" value="${esc(c.teaser_text || 'WAIT FOR IT... 👀')}" placeholder="e.g. WAIT FOR IT... 👀">
             </label>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
-              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='WAIT FOR IT... 👀'">WAIT FOR IT... 👀</button>
-              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='WATCH TILL END 😱'">WATCH TILL END 😱</button>
-              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='HOW IT HAPPENED 👇'">HOW IT HAPPENED 👇</button>
-              <button type="button" class="btn small" style="font-size:11px;padding:3px 8px" onclick="$('#teaser_text_input').value='DON\'T BLINK 💥'">DON'T BLINK 💥</button>
+            <div class="preset-pills">
+              <button type="button" class="preset-pill" onclick="$('#teaser_text_input').value='WAIT FOR IT... 👀'">WAIT FOR IT... 👀</button>
+              <button type="button" class="preset-pill" onclick="$('#teaser_text_input').value='WATCH TILL END 😱'">WATCH TILL END 😱</button>
+              <button type="button" class="preset-pill" onclick="$('#teaser_text_input').value='HOW IT HAPPENED 👇'">HOW IT HAPPENED 👇</button>
+              <button type="button" class="preset-pill" onclick="$('#teaser_text_input').value='DON\'T BLINK 💥'">DON'T BLINK 💥</button>
             </div>
-            <div class="two">
+            <div class="two" style="margin-top:8px">
               <label class="f">Teaser Duration
                 <select data-f="teaser_dur">
                   <option value="1.5" ${c.teaser_dur === 1.5 ? "selected" : ""}>1.5s (Ultra Fast Cut)</option>
@@ -2333,25 +2638,25 @@ function drawClipDlg(full) {
               </label>
               <label class="f">Climax Timestamp (sec)
                 <input data-f="teaser_start" type="number" step="0.5" value="${c.teaser_start != null ? c.teaser_start : ''}" placeholder="Auto (peaks at ~70%)">
-                <small class="sub" style="font-size:10px;color:var(--dim)">Leave blank for auto-detected climax</small>
+                <small class="sub" style="font-size:10px;color:#64748b">Leave blank for auto-detected climax</small>
               </label>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 2: BACKGROUND MUSIC (AI AUTO, REMOVE, OR ADD MINE) -->
-        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-            <strong style="font-size:13px;color:var(--brand-ink)">🎵 2. Background Music & Audio</strong>
+        <!-- TAB 3: AUDIO & MUSIC -->
+        <div id="ed-tab-audio" class="ed-sec">
+          <div class="ed-sec-title">
+            <span>🎵 Background Music & Audio Engineering</span>
             <div style="display:flex;gap:4px">
               <button type="button" class="btn small" data-act="music-auto" title="Let AI auto-pick music based on video mood">🤖 AI Auto</button>
-              <button type="button" class="btn small" data-act="music-remove" title="Remove music completely" style="color:var(--bad)">🚫 Remove Music</button>
+              <button type="button" class="btn small" data-act="music-remove" title="Remove music completely" style="color:#ef4444">🚫 Remove Music</button>
               <button type="button" class="btn small primary" data-act="music-upload-btn" title="Add your own custom MP3/WAV">📁 Add Mine</button>
               <input type="file" id="custom_music_file" accept="audio/*" style="display:none">
             </div>
           </div>
-          <div class="two">
-            <label class="f">Selected Track
+          <div class="two" style="margin-top:6px">
+            <label class="f">Selected Music Track
               <select data-f="music" id="clip_music_select">
                 <option value="none" ${c.music === "none" ? "selected" : ""}>🚫 Off (No Music)</option>
                 <option value="auto" ${c.music === "auto" ? "selected" : ""}>✨ AI Auto-Pick (by video emotion)</option>
@@ -2360,21 +2665,21 @@ function drawClipDlg(full) {
             </label>
             <label class="f">Music Volume & Speech Ducking
               <input data-f="music_vol" type="range" min="0.05" max="0.45" step="0.01" value="${c.music_vol || 0.18}">
-              <small class="sub" style="font-size:11px;color:var(--dim)">Auto-drops volume when voice speaks</small>
+              <small class="sub" style="font-size:11px;color:#94a3b8">Auto-drops volume when voice speaks</small>
             </label>
           </div>
         </div>
 
-        <!-- SECTION 3: BRANDING & TIMING -->
-        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <strong style="font-size:13px;color:var(--brand-ink)">🏷️ 3. Watermark Badge & Timing</strong>
-            <span style="font-size:11px;color:var(--dim)">Brand & Framing</span>
+        <!-- TAB 4: LAYOUT & TRIM -->
+        <div id="ed-tab-layout" class="ed-sec">
+          <div class="ed-sec-title">
+            <span>📐 Framing, Watermark & Timestamps</span>
+            <span class="ed-sec-sub">Visual Geometry</span>
           </div>
           <div class="two">
             <label class="f">Corner Tag / Watermark (Optional)
               <input data-f="corner_tag" value="${esc(c.corner_tag || '')}" placeholder="e.g. 🔴 Kai Cenat or Watch @Streamer">
-              <small class="sub" style="font-size:11px;color:var(--dim)">Frosted pill watermark in corner</small>
+              <small class="sub" style="font-size:11px;color:#64748b">Frosted pill watermark in corner</small>
             </label>
             <label class="f">Video Layout<select data-f="layout">${opts(S.status.layouts, c.layout)}</select></label>
           </div>
@@ -2396,24 +2701,10 @@ function drawClipDlg(full) {
           </div>
         </div>
 
-        <!-- Transcript & Speech Words Editor -->
-        <details style="margin:4px 0 10px 0;background:var(--subtle, rgba(255,255,255,0.03));border-radius:10px;padding:10px 12px;border:1px solid var(--line)">
-          <summary style="font-size:12px;font-weight:600;cursor:pointer;color:var(--dim)">✏️ Edit Caption Words (Fix Typos / Streamer Names)</summary>
-          <div style="margin-top:8px">
-            <textarea data-f="words_text" rows="3" placeholder="Caption words transcribed...">${esc(c.words_text || "")}</textarea>
-            <small class="help" style="margin-top:4px">Fix any misheard words or streamer names here. They will appear in the re-rendered captions.</small>
-          </div>
-        </details>
-
-        <!-- ACTION BUTTON: RE-MAKE CLIP -->
-        <button class="btn primary" data-act="remake" style="width:100%;height:44px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;box-shadow:0 2px 10px rgba(0,0,0,0.15)">
-          ${ic("scissors")} ⚡ Re-render Clip with My Edits
-        </button>
-
-        <!-- Social Copy & Post Text -->
-        <div style="background:var(--subtle, rgba(255,255,255,0.03));border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <strong style="font-size:13px;color:var(--brand-ink)">📋 Post Text & Socials</strong>
+        <!-- TAB 5: POST COPY -->
+        <div id="ed-tab-social" class="ed-sec">
+          <div class="ed-sec-title">
+            <span>📋 Title, Description & Social Copy</span>
             <button class="btn small" data-act="writetext">${ic("bolt")} Write again with AI</button>
           </div>
           <label class="f" style="margin-bottom:6px">Title<input data-f="title" value="${esc(c.title)}"></label>
@@ -2426,16 +2717,29 @@ function drawClipDlg(full) {
             <button type="button" class="btn small" data-act="copyx">✖️ X / Twitter</button>
           </div>
         </div>
-        <h3>Post it</h3>
+
         <div id="dposts" class="row" style="gap:4px"></div>
-        ${S.accounts.length ? `<div class="row">${S.accounts.map(a => `<label class="ck"><input type="checkbox" data-pacc value="${esc(a.id)}">${esc(a.label)} · ${esc(a.name)}</label>`).join("")}</div>
-          <div class="row"><button class="btn primary" data-act="postnow">${ic("send")}Post now</button><button class="btn" data-act="postqueue">Add to queue</button></div>`
-          : `<p class="help">No accounts connected yet. Connect one in Settings.</p>`}
-        <div class="row" style="margin-top:auto;padding-top:8px;border-top:1px solid var(--line)">
-          ${c.status === "done" ? `<a class="btn" href="${m}${esc(c.file)}?download=1">${ic("down")}Download</a>` : ""}
-          <button class="btn" data-act="copy" data-j="${j.id}" data-c="${esc(c.id)}">${ic("copy")}Copy post text</button></div>
-      </div></div>`;
-  } else if (D.sig !== sig) $("#stage").innerHTML = stage;
+
+        <!-- STICKY ACTION FOOTER -->
+        <div class="ed-footer-action">
+          <button type="button" class="btn-remake-cta" data-act="remake">
+            ${ic("scissors")} ⚡ Re-render Clip with My Edits
+          </button>
+          <div class="ed-safe-notice">
+            <span>🛡️</span> Safe Staging Mode Active: Edits re-render & stage locally. Auto-posting is frozen.
+          </div>
+          <div class="row" style="margin-top:4px">
+            ${c.status === "done" ? `<a class="btn" href="${m}${esc(c.file)}?download=1" style="flex:1;justify-content:center">${ic("down")}Download HD MP4</a>` : ""}
+            <button class="btn" data-act="copy" data-j="${j.id}" data-c="${esc(c.id)}" style="flex:1;justify-content:center">${ic("copy")}Copy All Post Text</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  } else if (D.sig !== sig) {
+    const sb = $("#stage-video-box");
+    if (sb) sb.innerHTML = stage;
+    else if ($("#stage")) $("#stage").innerHTML = stage;
+  }
   D.sig = sig;
   put($("#dposts"), postPills(c));
 }

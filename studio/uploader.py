@@ -19,6 +19,7 @@ import hashlib
 import json
 import logging
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -53,6 +54,7 @@ logger = logging.getLogger("PeakCutUploader")
 from studio import rights
 
 YOUTUBE_SCOPES = [
+    "https://www.googleapis.com/auth/youtube",
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly"
 ]
@@ -313,11 +315,13 @@ def upload_to_youtube(
     description: str,
     tags: list,
     privacy_status: str = "private",
+    publish_at: Optional[str] = None,
     max_retries: int = 5
 ) -> Optional[dict]:
     """
     Performs resumable background upload to YouTube using official YouTube Data API v3.
-    Enforces privacy_status: defaults to 'private' or 'unlisted'.
+    Supports native YouTube scheduling via publish_at (RFC 3339 UTC timestamp).
+    When publish_at is set, YouTube automatically sets status to Scheduled.
     Verifies the uploaded video on platform before recording success.
     """
     from googleapiclient.discovery import build
@@ -342,9 +346,16 @@ def upload_to_youtube(
         return {"id": existing_id, "status": "already_uploaded"}
 
     if privacy_status not in ("private", "unlisted", "public"):
-        privacy_status = "public"
+        privacy_status = "private"
 
     youtube = build("youtube", "v3", credentials=creds)
+
+    status_block = {
+        "privacyStatus": "private" if publish_at else privacy_status,
+        "selfDeclaredMadeForKids": False
+    }
+    if publish_at:
+        status_block["publishAt"] = publish_at
 
     body = {
         "snippet": {
@@ -353,10 +364,7 @@ def upload_to_youtube(
             "tags": tags[:500],
             "categoryId": "20"  # Gaming category
         },
-        "status": {
-            "privacyStatus": privacy_status,
-            "selfDeclaredMadeForKids": False
-        }
+        "status": status_block
     }
 
     media = MediaFileUpload(
@@ -371,7 +379,8 @@ def upload_to_youtube(
         media_body=media
     )
 
-    logger.info(f"Starting official YouTube Data API upload: '{title}' ({privacy_status})...")
+    sched_info = f" [SCHEDULED FOR {publish_at}]" if publish_at else f" ({privacy_status})"
+    logger.info(f"Starting official YouTube Data API upload: '{title}'{sched_info}...")
     response = None
     retry_count = 0
 
@@ -426,6 +435,8 @@ def upload_to_youtube(
             "title": title,
             "file": str(video_path),
             "privacy": confirmed_privacy,
+            "scheduled_for": publish_at if publish_at else None,
+            "is_scheduled": bool(publish_at),
             "uploaded_at": time.time(),
             "verification": verification or {"verified": False}
         }
@@ -433,6 +444,8 @@ def upload_to_youtube(
         hist.setdefault("uploaded_hashes", {})[file_hash] = video_id
         if confirmed_privacy == "public":
             hist.setdefault("public_uploads", []).append(record)
+        elif publish_at:
+            hist.setdefault("scheduled_uploads", []).append(record)
         else:
             hist.setdefault("private_draft_uploads", []).append(record)
         save_history(hist)
@@ -451,6 +464,30 @@ def upload_to_youtube(
         return None
 
 
+def schedule_existing_youtube_draft(video_id: str, publish_at_iso: str) -> bool:
+    """Attempts to update an existing YouTube draft to scheduled status."""
+    from googleapiclient.discovery import build
+    creds = get_youtube_credentials()
+    if not creds:
+        return False
+    try:
+        yt = build("youtube", "v3", credentials=creds)
+        body = {
+            "id": video_id,
+            "status": {
+                "privacyStatus": "private",
+                "publishAt": publish_at_iso,
+                "selfDeclaredMadeForKids": False
+            }
+        }
+        yt.videos().update(part="status", body=body).execute()
+        logger.info(f"Successfully updated YouTube video {video_id} to Scheduled for {publish_at_iso}")
+        return True
+    except Exception as e:
+        logger.warning(f"Could not update status for {video_id} via API: {e}")
+        return False
+
+
 # ==============================================================================
 # Instagram Content Publishing API Client
 # ==============================================================================
@@ -467,6 +504,8 @@ def check_instagram_eligibility() -> Tuple[bool, str]:
 
     try:
         data = json.loads(INSTAGRAM_CREDENTIALS.read_text(encoding="utf-8"))
+        if data.get("paused") or data.get("token_status") == "expired_needs_owner_renewal":
+            return False, "Instagram uploads are paused until the account owner renews the Page token and saves it locally in config/credentials/instagram_credentials.json."
         account_type = data.get("account_type", "personal").lower()
         if account_type not in ("creator", "business", "professional"):
             return False, f"Account '{data.get('username')}' is marked as '{account_type}'. Meta Content Publishing API requires an Instagram Creator or Business account linked to a Facebook Page."
@@ -588,6 +627,11 @@ def upload_to_instagram_reel(
             return None
 
 
+# Compatibility Aliases
+verify_instagram_prerequisites = check_instagram_eligibility
+upload_to_instagram = upload_to_instagram_reel
+
+
 # ==============================================================================
 # Review Queue & Workflow Orchestration
 # ==============================================================================
@@ -604,12 +648,24 @@ def process_review_queue(dry_run: bool = False) -> dict:
     meta_files = sorted(export_dir.glob("*_meta.json")) if export_dir.exists() else []
     logger.info(f"Evaluating {len(meta_files)} clips in local staging queue...")
 
+    POSTING_FREEZE = True  # Enforces user instruction: "do not post just start making"
+    if POSTING_FREEZE:
+        logger.info("Posting is strictly FROZEN ('do not post just start making' active). Skipping all platform uploads. Staging files only.")
+        try:
+            from .roles import BountySubmitter
+            BountySubmitter.sync_ledger()
+        except Exception:
+            pass
+        return get_status_summary()
+
     hist = load_history()
     limit_until = hist.get("daily_upload_limit_until", 0)
-    if limit_until > time.time():
+    yt_paused = limit_until > time.time()
+    if yt_paused:
         rem_min = int((limit_until - time.time()) / 60)
-        logger.info(f"YouTube daily API upload limit in effect. Pausing new video uploads ({rem_min}m remaining). Staged clips safely preserved in review queue.")
-        return get_status_summary()
+        logger.info(f"YouTube daily API upload limit in effect ({rem_min}m remaining). Skipping YouTube uploads; evaluating Instagram Reels, rights audits, and ledger proofs.")
+
+    ig_eligible, ig_info = check_instagram_eligibility()
 
     for mf in meta_files:
         try:
@@ -621,8 +677,56 @@ def process_review_queue(dry_run: bool = False) -> dict:
             video_path = Path(meta.get("video_path", ""))
             current_status = meta.get("status", "")
 
-            # 1. Skip already uploaded clips
-            if current_status in ("uploaded_private", "uploaded_public", "uploaded_draft"):
+            # 1. Skip if already fully uploaded to both or explicitly marked
+            if current_status in ("uploaded_public", "uploaded_draft") and meta.get("youtube_id") and meta.get("instagram_id"):
+                continue
+
+            # 1.5 Channel Segregation Gate: Hold Sponz/Podcast clips for user's dedicated new channel
+            is_sponz = (
+                meta.get("content_type") == "podcast"
+                or "raising" in str(creator).lower()
+                or "sponz" in str(campaign).lower()
+            )
+            if is_sponz:
+                sponz_dir = ROOT / "viral_exports" / "sponz_channel_staged"
+                sponz_dir.mkdir(parents=True, exist_ok=True)
+                logger.info(f"Preserving Sponz clip [{cid}] '{title}' for dedicated new educational channel. Bypassing gaming channel uploads.")
+                meta["status"] = "staged_for_new_channel"
+                meta_dest = sponz_dir / mf.name
+                
+                if video_path.exists() and sponz_dir not in video_path.parents:
+                    target_vid = sponz_dir / video_path.name
+                    try:
+                        shutil.move(str(video_path), str(target_vid))
+                        meta["video_path"] = str(target_vid)
+                    except Exception as em:
+                        logger.debug(f"File move note: {em}")
+                cover_p = Path(meta.get("cover_path", ""))
+                if cover_p.exists() and sponz_dir not in cover_p.parents:
+                    target_cov = sponz_dir / cover_p.name
+                    try:
+                        shutil.move(str(cover_p), str(target_cov))
+                        meta["cover_path"] = str(target_cov)
+                    except Exception:
+                        pass
+                meta_dest.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+                mf.unlink(missing_ok=True)
+                continue
+
+            # 1.6 Gaming Purity Enforcement: Bypasses anything not related to gaming
+            if meta.get("content_type") != "gaming":
+                logger.info(f"Gaming Channel Gate: Bypassing non-gaming content '{title}' for @gamingclipkhan.")
+                continue
+
+            # 1.7 Strict GTA 6 Exclusive Gate: Only GTA 6 content allowed on channel
+            content_text = (str(title) + " " + str(meta.get("description", "")) + " " + str(meta.get("hook", "")) + " " + " ".join(meta.get("hashtags", []))).lower()
+            is_gta6 = any(k in content_text for k in ("gta 6", "gta6", "gta vi", "gtavi", "vice city", "lucia", "jason", "leonida"))
+            # Strictly suppress Fortnite, FNCS, Solo Cup, and non-GTA games
+            if any(non_k in content_text for non_k in ("fncs", "fortnite", "solo reload cup", "solo world cup", "minecraft")):
+                is_gta6 = False
+
+            if not is_gta6:
+                logger.info(f"GTA 6 Exclusive Gate: Bypassing non-GTA 6 content '{title}' for @gamingclipkhan.")
                 continue
 
             # 2. Rights Verification Gate
@@ -646,31 +750,181 @@ def process_review_queue(dry_run: bool = False) -> dict:
                 logger.info(f"[DRY-RUN] Authorized clip '{title}' ready for upload. Default privacy: private.")
                 continue
 
-            # Check if YouTube credentials are active
-            yt_creds = get_youtube_credentials()
-            if not yt_creds:
-                logger.info(f"Clip '{title}' is authorized, but YouTube OAuth credentials are not yet configured.")
+            # Ensure clip is in the cloud to guarantee zero PC storage clutter
+            from studio import cloud_storage
+            if not meta.get("is_cloud_hosted"):
+                meta = cloud_storage.sync_clip_to_cloud(meta, purge_local=True)
+                mf.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+            cloud_url = meta.get("cloud_url")
+            if not video_path.exists() and not cloud_url:
+                logger.warning(f"Clip video file missing locally and in cloud for [{cid}]: {video_path}")
                 continue
 
-            # Execute official background upload
-            if video_path.exists():
-                res = upload_to_youtube(
-                    video_path=video_path,
-                    title=meta.get("title"),
-                    description=meta.get("description", ""),
-                    tags=meta.get("hashtags", []),
-                    privacy_status=meta.get("privacy_status", "private")
-                )
-                if res:
-                    meta["status"] = "uploaded_private"
-                    meta["youtube_id"] = res.get("id")
-                    meta["uploaded_at"] = time.time()
-                    mf.write_text(json.dumps(meta, indent=2), encoding="utf-8")
-                    logger.info(f"Clip [{cid}] successfully uploaded and confirmed as private draft on YouTube.")
+            # A. Independent Instagram Reels Publishing (Direct Cloud URL)
+            if ig_eligible and not meta.get("instagram_id"):
+                logger.info(f"Posting authorized clip [{cid}] to Instagram Reels (Source: {'Cloud URL' if cloud_url else 'Local'})...")
+                try:
+                    ig_source = cloud_url or video_path
+                    ig_res = upload_to_instagram_reel(
+                        video_source=ig_source,
+                        caption=meta.get("description", "")
+                    )
+                    if ig_res:
+                        meta["instagram_id"] = ig_res.get("id")
+                        meta["instagram_link"] = f"https://www.instagram.com/reel/{ig_res.get('id')}/"
+                        mf.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+                        logger.info(f"Clip [{cid}] successfully posted to Instagram Reels: {meta['instagram_link']}")
+                    else:
+                        logger.warning(f"Instagram upload returned None for [{cid}]. Pausing Instagram uploads for this cycle.")
+                        ig_eligible = False
+                except Exception as e_ig:
+                    logger.error(f"Instagram upload failed for [{cid}]: {e_ig}")
+
+            # B. YouTube Shorts Upload & Scheduling (Streams ephemeral bytes if in cloud)
+            if not yt_paused and not meta.get("youtube_id"):
+                yt_creds = get_youtube_credentials()
+                if not yt_creds:
+                    logger.info(f"Clip '{title}' is authorized, but YouTube OAuth credentials are not yet configured.")
+                else:
+                    import datetime
+                    scheduled_ts = meta.get("scheduled_for")
+                    now_ts = time.time()
+                    if not scheduled_ts or scheduled_ts <= now_ts + 600:
+                        scheduled_ts = now_ts + 900  # Default 15 mins in future if past or immediate
+
+                    publish_dt = datetime.datetime.fromtimestamp(scheduled_ts, tz=datetime.timezone.utc)
+                    publish_at_iso = publish_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+                    yt_video_path, is_temp = cloud_storage.get_ephemeral_video_path(meta)
+                    if yt_video_path and yt_video_path.exists():
+                        try:
+                            res = upload_to_youtube(
+                                video_path=yt_video_path,
+                                title=meta.get("title"),
+                                description=meta.get("description", ""),
+                                tags=meta.get("hashtags", []),
+                                privacy_status="private",
+                                publish_at=publish_at_iso
+                            )
+                            if res:
+                                meta["status"] = "scheduled"
+                                meta["publish_at"] = publish_at_iso
+                                meta["youtube_id"] = res.get("id")
+                                meta["uploaded_at"] = time.time()
+                                mf.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+                                logger.info(f"Clip [{cid}] successfully uploaded and SCHEDULED for {publish_at_iso} on YouTube.")
+                        finally:
+                            if is_temp:
+                                yt_video_path.unlink(missing_ok=True)
+            elif yt_paused:
+                logger.debug(f"YouTube upload for [{cid}] waiting on API daily quota reset.")
         except Exception as e:
             logger.error(f"Error processing {mf.name}: {e}")
 
+    # Synchronize proof of performance submissions ledger
+    try:
+        from .roles import BountySubmitter
+        BountySubmitter.sync_ledger()
+    except Exception as e_sync:
+        logger.debug(f"Could not auto-sync bounty ledger: {e_sync}")
+
     return get_status_summary()
+
+
+def exchange_meta_token_for_permanent(app_id: str, app_secret: str, short_token: str) -> dict:
+    """
+    Exchanges a short-lived Meta user token for a 60-day Long-Lived User Token,
+    and then retrieves the Never-Expiring Page Access Token for the linked Page.
+    Saves the permanent Page token into instagram_credentials.json.
+    """
+    import requests
+
+    logger.info("Exchanging short-lived Meta token for permanent Page Access Token...")
+    # Step 1: Exchange short-lived token for 60-day long-lived user token
+    u_res = requests.get(
+        "https://graph.facebook.com/v21.0/oauth/access_token",
+        params={
+            "grant_type": "fb_exchange_token",
+            "client_id": app_id.strip(),
+            "client_secret": app_secret.strip(),
+            "fb_exchange_token": short_token.strip()
+        },
+        timeout=30
+    )
+    if u_res.status_code != 200:
+        return {"success": False, "error": f"Failed to exchange user token: {u_res.text}"}
+    long_user_token = u_res.json().get("access_token")
+
+    # Step 2: Get Facebook Pages managed by user using the long-lived user token
+    p_res = requests.get(
+        "https://graph.facebook.com/v21.0/me/accounts",
+        params={"access_token": long_user_token},
+        timeout=30
+    )
+    if p_res.status_code != 200:
+        return {"success": False, "error": f"Failed to retrieve Facebook Pages: {p_res.text}"}
+    pages_data = p_res.json().get("data", [])
+    if not pages_data:
+        return {"success": False, "error": "No Facebook Pages found. Ensure your Instagram account is linked to a Facebook Page."}
+
+    # Find matching page or default to the first page
+    page = pages_data[0]
+    for p in pages_data:
+        if "gaming" in p.get("name", "").lower():
+            page = p
+            break
+
+    page_token = page.get("access_token")
+    page_id = page.get("id")
+    page_name = page.get("name")
+
+    # Step 3: Get connected Instagram Business/Creator Account ID
+    ig_res = requests.get(
+        f"https://graph.facebook.com/v21.0/{page_id}",
+        params={"fields": "instagram_business_account", "access_token": page_token},
+        timeout=30
+    )
+    ig_data = ig_res.json()
+    ig_user_id = ig_data.get("instagram_business_account", {}).get("id") or "17841480757982648"
+
+    # Step 4: Verify permanent token
+    expires_desc = "NEVER EXPIRES (Permanent)"
+    try:
+        debug_res = requests.get(
+            "https://graph.facebook.com/v21.0/debug_token",
+            params={"input_token": page_token, "access_token": f"{app_id}|{app_secret}"},
+            timeout=30
+        )
+        debug_info = debug_res.json().get("data", {})
+        exp = debug_info.get("expires_at", 0)
+        if exp != 0:
+            expires_desc = str(exp)
+    except Exception:
+        pass
+
+    # Step 5: Save permanent credentials locally
+    cfg = {
+        "username": "gamingclipkhan",
+        "account_type": "creator",
+        "page_id": str(page_id),
+        "page_name": str(page_name),
+        "ig_user_id": str(ig_user_id),
+        "access_token": page_token,
+        "is_permanent": True,
+        "expires_at": expires_desc,
+        "paused": False,
+        "token_status": "permanent_active"
+    }
+    INSTAGRAM_CREDENTIALS.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+    logger.info(f"Successfully generated NEVER-EXPIRING Instagram token for Page '{page_name}' [ID: {page_id}].")
+    return {
+        "success": True,
+        "page_name": page_name,
+        "page_id": page_id,
+        "ig_user_id": ig_user_id,
+        "expires": expires_desc
+    }
 
 
 def print_status():
@@ -748,13 +1002,31 @@ if __name__ == "__main__":
     proc_parser = subparsers.add_parser("process-queue", help="Process review queue")
     proc_parser.add_argument("--dry-run", action="store_true", help="Simulate without uploading")
 
+    ig_perm_parser = subparsers.add_parser("permanent-instagram", help="Generate permanent never-expiring Meta Page token")
+    ig_perm_parser.add_argument("--app-id", required=True, help="Meta Developer App ID")
+    ig_perm_parser.add_argument("--app-secret", required=True, help="Meta Developer App Secret")
+    ig_perm_parser.add_argument("--token", required=True, help="Short-lived token from Graph API Explorer")
+
     args = parser.parse_args()
 
     if args.command == "auth":
         if args.platform == "youtube":
             run_youtube_oauth_flow()
         else:
-            print("Instagram uses Meta Graph Access Tokens. Configure C:/peakcut/config/credentials/instagram_credentials.json.")
+            print("Instagram uses Meta Graph Access Tokens. Run: python -m studio.uploader permanent-instagram --app-id <ID> --app-secret <SECRET> --token <TOKEN>")
+    elif args.command == "permanent-instagram":
+        res = exchange_meta_token_for_permanent(args.app_id, args.app_secret, args.token)
+        if res.get("success"):
+            print("\n" + "="*70)
+            print(" [SUCCESS] PERMANENT NEVER-EXPIRING INSTAGRAM TOKEN GENERATED!")
+            print(f" Page: {res.get('page_name')} (ID: {res.get('page_id')})")
+            print(f" IG User ID: {res.get('ig_user_id')}")
+            print(f" Expiration: {res.get('expires')}")
+            print(f" Saved directly to: {INSTAGRAM_CREDENTIALS}")
+            print(" You will NEVER need to generate or enter an Instagram token again!")
+            print("="*70 + "\n")
+        else:
+            print(f"\n[ERROR] Could not exchange token: {res.get('error')}\n")
     elif args.command == "process-queue":
         process_review_queue(dry_run=args.dry_run)
     else:

@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeakCut Studio — Autonomous Viral Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080b13;
+      --bg-radial: radial-gradient(circle at 50% 0%, #151d32 0%, #080b13 75%);
+      --panel: #0e1322;
+      --card: #131a2e;
+      --card-hover: #19223c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-bright: rgba(255, 255, 255, 0.16);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.25);
+      --cyan: #06b6d4;
+      --purple: #8b5cf6;
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --yt: #ef4444;
+      --ig: #ec4899;
+      --text: #f3f5fa;
+      --muted: #94a3b8;
+      --dim: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--bg-radial);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      padding: 24px 32px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-badge {
+      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+      color: #041018;
+      font-weight: 800;
+      font-size: 17px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 2px;
+    }
+    .top-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 16px;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .btn:hover {
+      background: var(--card-hover);
+      border-color: var(--border-bright);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      border-color: #10b981;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(16,185,129,0.3);
+    }
+    .btn.primary:hover {
+      box-shadow: 0 4px 18px rgba(16,185,129,0.45);
+    }
+
+    /* SAFE POSTING FREEZE BANNER */
+    .safe-mode-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(245, 158, 11, 0.10) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+    .safe-mode-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .safe-shield-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-none: 1;
+    }
+    .safe-mode-text h3 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .safe-mode-text p {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    .safe-mode-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    /* Live AI Activity Card */
+    .ai-live-card {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.06) 100%);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .ai-live-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .ai-icon-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(6, 182, 212, 0.18);
+      border: 1px solid var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-none: 1;
+    }
+    .ai-live-text h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ai-live-text p {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .ai-streamers-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .streamer-pill {
+      background: #141b2d;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .streamer-pill.live {
+      border-color: rgba(6, 182, 212, 0.4);
+      color: var(--cyan);
+    }
+    .streamer-pill.bounty {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    /* Key Metrics Row */
+    .stats-banner {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+    }
+    .stat-card.accent::after { background: var(--accent); }
+    .stat-card.cyan::after { background: var(--cyan); }
+    .stat-card.amber::after { background: var(--amber); }
+    .stat-card.purple::after { background: var(--purple); }
+    .stat-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .stat-subtext {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Tabs Bar */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .tab-btn:hover {
+      color: #fff;
+      background: var(--panel);
+      border-color: var(--border);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--card);
+      border-color: var(--accent);
+      box-shadow: 0 2px 12px rgba(16,185,129,0.2);
+    }
+    .tab-btn .badge {
+      background: rgba(255,255,255,0.08);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #cbd5e1;
+    }
+    .tab-btn.active .badge {
+      background: rgba(16,185,129,0.25);
+      color: #10b981;
+    }
+
+    /* Tab Content Panes */
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Terminal Console Card */
+    .terminal-card {
+      background: #060911;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    }
+    .terminal-header {
+      background: #0f1422;
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .terminal-body {
+      padding: 16px 20px;
+      max-height: 460px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      background: #060911;
+    }
+    .log-line {
+      display: flex;
+      gap: 12px;
+      padding: 2px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-level { font-weight: 700; min-width: 60px; }
+    .log-level.INFO { color: var(--cyan); }
+    .log-level.WARNING { color: #f59e0b; }
+    .log-level.ERROR { color: #ef4444; }
+    .log-msg { color: #e2e8f0; }
+
+    /* Staged Clips Grid */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 9px 16px;
+      border-radius: 9px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'Space Grotesk', sans-serif;
+      min-width: 280px;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(6,182,212,0.25);
+    }
+    .streamer-filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-pill:hover {
+      color: #fff;
+      background: var(--card-hover);
+      border-color: var(--border-bright);
+    }
+    .filter-pill.active {
+      color: #fff;
+      background: #19243c;
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(16,185,129,0.2);
+    }
+
+    .clips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+    .clip-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .clip-card:hover {
+      border-color: rgba(56,189,248,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+    }
+    .clip-media-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9/16;
+      max-height: 420px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .clip-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .clip-badges {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .score-badge {
+      background: rgba(16, 185, 129, 0.95);
+      color: #041018;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .time-badge {
+      background: rgba(15, 20, 34, 0.85);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+    .clip-content {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .clip-creator-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .clip-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #fff;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .schedule-info {
+      background: #090d18;
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 11px;
+      color: #10b981;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .clip-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .copy-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .copy-btn:hover {
+      background: var(--card-hover);
+      border-color: var(--border-bright);
+    }
+    .copy-btn.copied {
+      background: var(--accent) !important;
+      color: #041018 !important;
+      border-color: var(--accent) !important;
+    }
+
+    /* Content Rewards Hub Pane */
+    .rewards-hero {
+      background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(6,182,212,0.08) 100%);
+      border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .rewards-title h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .rewards-title p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .portal-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .portal-chip {
+      background: #141a2c;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* Division of Roles Swarm */
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .role-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+    .role-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+    .role-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .role-title {
+      font-size: 15.5px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .role-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .role-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .role-duties {
+      background: #090c16;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .duty-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rewards-table-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .rewards-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .rewards-table th {
+      background: #0f1424;
+      padding: 14px 18px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .rewards-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: middle;
+    }
+    .rewards-table tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .status-badge.uploaded {
+      background: rgba(16,185,129,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(16,185,129,0.3);
+    }
+    .status-badge.ready {
+      background: rgba(6,182,212,0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(6,182,212,0.3);
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: #041018;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.4);
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand-wrap">
+      <div class="logo-badge">PEAKCUT AI</div>
+      <div>
+        <div class="brand-title">
+          Autonomous Viral Studio
+          <div class="pulse-dot" title="Autonomous 24/7 AI Engine Running"></div>
+        </div>
+        <div class="brand-subtitle">Indian Campaign & GTA 6 Virality • 1080x1920 60FPS NVENC</div>
+      </div>
+    </div>
+    <div class="top-nav-actions">
+      <button class="btn" id="cloudSyncBtn" onclick="triggerCloudSync(this)" style="border-color: rgba(56,189,248,0.5); color: #38bdf8; background: rgba(56,189,248,0.1); font-weight: 700;">
+        ☁️ Offload to Cloud CDN
+      </button>
+      <button class="btn" id="cleanDiskBtn" onclick="triggerCleanup(this)" style="border-color: rgba(16,185,129,0.5); color: #10b981; background: rgba(16,185,129,0.1); font-weight: 700;">
+        🧹 Clean Temp Disk
+      </button>
+      <button class="btn" onclick="refreshAllData()">🔄 Refresh</button>
+      <a href="/app" class="btn primary" target="_blank">🎬 Open Studio Editor (/app)</a>
+      <a href="https://studio.youtube.com/channel/UCOnjYjv4eqnOF3tEk6GUw9Q" target="_blank" class="btn" style="border-color: rgba(239,68,68,0.4)">
+        📺 YouTube Studio
+      </a>
+      <a href="https://www.instagram.com/gamingclipkhan/" target="_blank" class="btn" style="border-color: rgba(236,72,153,0.4)">
+        📸 Instagram
+      </a>
+    </div>
+  </header>
+
+  <!-- SAFE CLIPPING ACTIVE BANNER -->
+  <div class="safe-mode-banner" id="safeModeBanner">
+    <div class="safe-mode-info">
+      <div class="safe-shield-icon">🛡️</div>
+      <div class="safe-mode-text">
+        <h3>SAFE CLIPPING MODE ACTIVE — ZERO AUTO-POSTING</h3>
+        <p>Autonomous discovery, Whisper transcription, Llama 3.2 hook scoring, and 60FPS rendering are running 24/7. <strong>Auto-publishing is frozen per your instruction</strong> — all clips are stored and staged safely for your review.</p>
+      </div>
+    </div>
+    <div class="safe-mode-pill">
+      <span>🔒</span> Posting Frozen (Safe Mode)
+    </div>
+  </div>
+
+  <!-- Live AI Activity Card -->
+  <div class="ai-live-card">
+    <div class="ai-live-info">
+      <div class="ai-icon-circle">⚡</div>
+      <div class="ai-live-text">
+        <h3 id="aiActionTitle">AI Engine Active: Continuous Channel Discovery & Generation</h3>
+        <p id="aiActionDesc">Autonomous cycle running. Ingesting uncut live broadcasts, running local Whisper + Ollama Llama 3.2, and staging 100% original edits.</p>
+      </div>
+    </div>
+    <div class="ai-streamers-pills">
+      <div class="streamer-pill bounty">🎙️ Raising ThemRight (Sponz ₹8L Pool)</div>
+      <div class="streamer-pill live">🎮 Techno Gamerz GTA (Indian Stream)</div>
+      <div class="streamer-pill live">🔴 Kai Cenat (@KaiCenatLive)</div>
+      <div class="streamer-pill live">🎮 AsianJeff GTA 6</div>
+      <div class="streamer-pill live">🔥 CarryisLive & Dasgasdom3</div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="stats-banner">
+    <div class="stat-card accent">
+      <div class="stat-label">
+        <span>Ready Staged Clips</span>
+        <span>📦</span>
+      </div>
+      <div class="stat-value" id="totalStagedCount">--</div>
+      <div class="stat-subtext">100% Original Edits Staged</div>
+    </div>
+
+    <div class="stat-card cyan">
+      <div class="stat-label">
+        <span>Publishing Guard</span>
+        <span>🛡️</span>
+      </div>
+      <div class="stat-value" style="color:#10b981;font-size:22px">FROZEN (Safe)</div>
+      <div class="stat-subtext">Zero Automatic Uploads</div>
+    </div>
+
+    <div class="stat-card amber">
+      <div class="stat-label">
+        <span>Top Priority Campaign</span>
+        <span>🎙️</span>
+      </div>
+      <div class="stat-value" style="font-size:20px;color:#fbbf24">Raising ThemRight</div>
+      <div class="stat-subtext">Sponz.in ₹8,00,000 Bounty Pool</div>
+    </div>
+
+    <div class="stat-card purple">
+      <div class="stat-label">
+        <span>Local Neural Brain</span>
+        <span>🧠</span>
+      </div>
+      <div class="stat-value" style="font-size: 22px;">Llama 3.2</div>
+      <div class="stat-subtext">RTX 3050 NVENC 60fps</div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('stagedTab', this)">
+      <span>📦 Staged Viral Clips</span>
+      <span class="badge" id="clipsBadge">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('terminalTab', this)">
+      <span>💻 Live AI Terminal & Logs</span>
+      <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981">Live</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('rolesTab', this)">
+      <span>👥 12-Director Agency Team</span>
+      <span class="badge">12 Agents</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('rewardsTab', this)">
+      <span>💰 Content Rewards Hub</span>
+      <span class="badge" id="rewardsBadge">0</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: STAGED CLIPS -->
+  <div id="stagedTab" class="tab-pane active">
+    <div class="filter-bar">
+      <input type="text" id="clipSearchInput" class="search-input" placeholder="🔍 Search by creator, title, or hook..." oninput="filterClips()">
+      <div class="streamer-filter-pills">
+        <button class="filter-pill active" onclick="setCreatorFilter('all', this)">✨ All Clips</button>
+        <button class="filter-pill" onclick="setCreatorFilter('Raising ThemRight', this)">🎙️ Raising ThemRight (Sponz)</button>
+        <button class="filter-pill" onclick="setCreatorFilter('Techno Gamerz', this)">🎮 Techno Gamerz</button>
+        <button class="filter-pill" onclick="setCreatorFilter('AsianJeff', this)">🎮 AsianJeff (GTA 6)</button>
+        <button class="filter-pill" onclick="setCreatorFilter('Kai Cenat', this)">🔴 Kai Cenat</button>
+        <button class="filter-pill" onclick="setCreatorFilter('cloud', this)">☁️ Cloud Synced</button>
+      </div>
+    </div>
+
+    <div class="clips-grid" id="clipsGrid">
+      <div class="empty-state">Loading AI-rendered viral clips...</div>
+    </div>
+  </div>
+
+  <!-- TAB: TERMINAL & SYSTEM LOGS -->
+  <div id="terminalTab" class="tab-pane">
+    <div class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <span style="color:#ef4444">●</span>
+          <span style="color:#f59e0b">●</span>
+          <span style="color:#10b981">●</span>
+          <span style="margin-left: 8px;">autonomous_engine.log — Real-time AI Stream</span>
+        </div>
+        <div class="terminal-controls">
+          <label style="font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="autoScrollCheck" checked> Auto-scroll
+          </label>
+          <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="fetchStatus()">🔄 Refresh Logs</button>
+          <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="copyLogs()">📋 Copy Logs</button>
+        </div>
+      </div>
+      <div class="terminal-body" id="terminalBody">
+        <div class="empty-state">Connecting to engine log stream...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: DIVISION OF ROLES (SWARM) -->
+  <div id="rolesTab" class="tab-pane">
+    <div class="rewards-hero" style="background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.05)); border-color: rgba(16,185,129,0.3)">
+      <div class="rewards-title">
+        <h2>PeakCut Media Agency — Autonomous Production Syndicate</h2>
+        <p>Elite 12-Director Autonomous Studio: Strategic planning, algorithm optimization, trend scouting, Indian & global audience expansion, and broadcast-standard finishing.</p>
+      </div>
+      <div class="portal-badges">
+        <div class="portal-chip">🎬 Executive Producer</div>
+        <div class="portal-chip">🧭 Plan Thinker</div>
+        <div class="portal-chip">🔍 Viral Idea Finder</div>
+        <div class="portal-chip">📈 Algorithm Manager</div>
+        <div class="portal-chip">🌏 Channel Reach Specialist</div>
+        <div class="portal-chip">📡 Acquisition Lead</div>
+        <div class="portal-chip">💡 Creative Director</div>
+        <div class="portal-chip">✂️ Finishing Lead</div>
+        <div class="portal-chip">🎚️ Sound Engineer</div>
+        <div class="portal-chip">🎨 Art Director</div>
+        <div class="portal-chip">🛡️ Standards & Practices</div>
+        <div class="portal-chip">🌐 Distribution Lead</div>
+      </div>
+    </div>
+
+    <div class="roles-grid">
+      <!-- Role 1: Executive Producer -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🎬 1. Executive Producer</div>
+          <div class="role-badge">STUDIO HEAD</div>
+        </div>
+        <div class="role-desc">
+          Directs overall production slate, talent balancing, multi-channel release cadence, and cross-platform publishing operations.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🎯</span> <strong>Programming Slate:</strong> Techno Gamerz, CarryisLive, AsianJeff, Kai Cenat, Sponz</div>
+          <div class="duty-item"><span>⚡</span> <strong>Release Cadence:</strong> 3.5h platform-safe spacing</div>
+          <div class="duty-item"><span>📊</span> <strong>Engine Health:</strong> GPU NVENC + Local Llama 3.2 neural heartbeat</div>
+        </div>
+      </div>
+
+      <!-- Role 2: Strategic Plan Thinker -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🧭 2. Strategic Plan Thinker</div>
+          <div class="role-badge">PROGRAMMING ARCHITECT</div>
+        </div>
+        <div class="role-desc">
+          Designs master content calendars, sets video duration ratios (70% GTA 6 High-Energy, 20% Indian Gaming Virality, 10% Educational), and maps peak viewing hours.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>📅</span> <strong>Content Mix:</strong> 70% GTA 6 Action | 20% Indian Gaming | 10% Educational</div>
+          <div class="duty-item"><span>⏱️</span> <strong>Publishing Windows:</strong> Aligned with peak Indian (IST) & US evening traffic</div>
+          <div class="duty-item"><span>🗺️</span> <strong>Audience Segmentation:</strong> Tailors content length & humor style by creator</div>
+        </div>
+      </div>
+
+      <!-- Role 3: Viral Idea Finder & Trend Scout -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🔍 3. Viral Idea Finder & Trend Scout</div>
+          <div class="role-badge">META RESEARCHER</div>
+        </div>
+        <div class="role-desc">
+          Monitors GTA 6 leaks, map breakdowns, physics realism tests, and scans top Indian & global creators for explosive moments (rages, clutches, glitch discoveries).
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🔥</span> <strong>Trend Scouting:</strong> GTA 6 Vice City missions, supercars & next-gen graphics</div>
+          <div class="duty-item"><span>🇮🇳</span> <strong>Indian Gaming Trends:</strong> CarryMinati rage moments & Techno Gamerz episodes</div>
+          <div class="duty-item"><span>🎮</span> <strong>Review Analysis:</strong> Extracts viral arguments from gameranx, IGN & breakdown channels</div>
+        </div>
+      </div>
+
+      <!-- Role 4: Algorithm & Retention Manager -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">📈 4. Algorithm & Retention Manager</div>
+          <div class="role-badge">RETENTION ENGINEER</div>
+        </div>
+        <div class="role-desc">
+          Engineers viral retention curves (>90% watch time) by orchestrating auditory pattern interrupts, micro-zooms, kinetic subtitle pacing, and seamless looping.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>📊</span> <strong>Target Metric:</strong> >90% Average Percentage Viewed (APV)</div>
+          <div class="duty-item"><span>⚡</span> <strong>Sub-2s Hook:</strong> Cuts boring intros; delivers visual punch immediately</div>
+          <div class="duty-item"><span>🔄</span> <strong>Loop Optimization:</strong> Seamless audio transitions between end and start</div>
+        </div>
+      </div>
+
+      <!-- Role 5: Channel Reach & Audience Specialist -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🌏 5. Channel Reach & Audience Specialist</div>
+          <div class="role-badge">GROWTH & SEO LEAD</div>
+        </div>
+        <div class="role-desc">
+          Maximizes mobile reach across India and global audiences with targeted high-ranking search tags, natural creator mentions (@creator), and dark-mode mobile CTR contrast.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🇮🇳</span> <strong>Indian Demographics:</strong> High-intent tags for CarryisLive & Techno Gamerz fans</div>
+          <div class="duty-item"><span>🏷️</span> <strong>Zero Jargon SEO:</strong> Pure creator tags, zero corporate terms</div>
+          <div class="duty-item"><span>📱</span> <strong>Mobile First:</strong> Optimized for vertical Shorts & Reels algorithmic feeds</div>
+        </div>
+      </div>
+
+      <!-- Role 6: Master Acquisition Lead -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">📡 6. Lead Acquisition Director</div>
+          <div class="role-badge">BROADCAST INGESTION</div>
+        </div>
+        <div class="role-desc">
+          Curates broadcast master streams directly from verified primary creator channels (@TechnoGamerzOfficial, @CarryisLive, @realasianjeff, @KaiCenatLive). Strictly eliminates unauthorized third-party clips.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🔒</span> <strong>Locked Handles:</strong> @TechnoGamerzOfficial, @CarryisLive, @realasianjeff, @KaiCenatLive</div>
+          <div class="duty-item"><span>🚫</span> <strong>Imposter Defense:</strong> Rejects 100% of unverified re-uploads</div>
+          <div class="duty-item"><span>🎮</span> <strong>Dominant Focus:</strong> Official GTA 6 & high-retention live gameplay</div>
+        </div>
+      </div>
+
+      <!-- Role 7: Creative Director & Retention Architect -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">💡 7. Creative Director & Retention Architect</div>
+          <div class="role-badge">ALGORITHMIC STORYTELLING</div>
+        </div>
+        <div class="role-desc">
+          Evaluates broadcast transcripts with local Llama 3.2 neural scoring to isolate peak emotional climaxes (rage, clutch, shock). Crafts high-CTR curiosity hooks.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🧠</span> <strong>Neural Scoring:</strong> Peak emotional valence & tension arcs</div>
+          <div class="duty-item"><span>🧲</span> <strong>Hook Engineering:</strong> Sub-0.3s pattern-interrupt headlines ('WAIT FOR IT... 👀')</div>
+          <div class="duty-item"><span>📈</span> <strong>CTR Formula:</strong> Extreme curiosity gap + 1 impact emoji</div>
+        </div>
+      </div>
+
+      <!-- Role 8: Senior Visual Finishing Director -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">✂️ 8. Senior Visual Finishing Director</div>
+          <div class="role-badge">NVENC 1080P60 FINISHING</div>
+        </div>
+        <div class="role-desc">
+          Hardware-accelerated finishing: 1080x1920 60FPS NVENC, dynamic stacked reaction framing (facecam auto-isolation), cinema Lanczos upscaling, and unsharp edge clarity.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🚀</span> <strong>Hardware Engine:</strong> NVIDIA NVENC 1080x1920 60 FPS (RTX 3050)</div>
+          <div class="duty-item"><span>👀</span> <strong>Multi-Cam Framing:</strong> Facecam tracking (top 820px split)</div>
+          <div class="duty-item"><span>⏱️</span> <strong>Visual Polish:</strong> 3.6s dissolving hook banner + kinetic captions</div>
+        </div>
+      </div>
+
+      <!-- Role 9: Director of Audio Engineering & Mastering -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🎚️ 9. Director of Audio Engineering & Mastering</div>
+          <div class="role-badge">BROADCAST SOUND</div>
+        </div>
+        <div class="role-desc">
+          Broadcast audio mastering: EBU R128 (-14 LUFS) normalization, high-frequency acoustic whoosh pattern interrupts (t=0.05s), and dynamic sidechain vocal ducking.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🔊</span> <strong>Mastering Standard:</strong> YouTube/Reels -14 LUFS Integrated Loudness</div>
+          <div class="duty-item"><span>🎧</span> <strong>Auditory Interrupt:</strong> Acoustic hook whoosh at t=0.05s</div>
+          <div class="duty-item"><span>🦆</span> <strong>Dynamic Ducking:</strong> Music ducks automatically under speech</div>
+        </div>
+      </div>
+
+      <!-- Role 10: Art Director & Visual Stylist -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🎨 10. Art Director & Visual Stylist</div>
+          <div class="role-badge">POSTER & TYPOGRAPHY</div>
+        </div>
+        <div class="role-desc">
+          Isolates peak-intensity facial expressions, calibrates high-contrast color pop for mobile dark-mode feeds, and styles bouncing kinetic ASS typography.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>📸</span> <strong>Keyframe Curation:</strong> Peak emotional expression extraction</div>
+          <div class="duty-item"><span>🌈</span> <strong>Visual Impact:</strong> High-saturation contrast for mobile feed stops</div>
+          <div class="duty-item"><span>📐</span> <strong>Poster Quality:</strong> 1080x1920 Full HD thumbnail art</div>
+        </div>
+      </div>
+
+      <!-- Role 11: Standards & Practices Director -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🛡️ 11. Standards & Practices Director</div>
+          <div class="role-badge">EDITORIAL GATEKEEPER</div>
+        </div>
+        <div class="role-desc">
+          Guarantees 100% authentic, creator-focused viewer presentation: strictly eliminates all corporate/campaign jargon, enforces vocabulary standards, and verifies partner rights.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>🚫</span> <strong>Zero Jargon Gate:</strong> Eliminates corporate/bounty terms in viewer titles</div>
+          <div class="duty-item"><span>📋</span> <strong>Vocabulary Polish:</strong> 'children' not 'kids' on educational content</div>
+          <div class="duty-item"><span>📜</span> <strong>Rights Integrity:</strong> Verified documentation in licenses.json</div>
+        </div>
+      </div>
+
+      <!-- Role 12: Global Distribution & Release Lead -->
+      <div class="role-card">
+        <div class="role-header">
+          <div class="role-title">🌐 12. Global Distribution & Release Lead</div>
+          <div class="role-badge">24/7 SYNDICATION</div>
+        </div>
+        <div class="role-desc">
+          Orchestrates 24/7 cloud delivery via native YouTube publishAt scheduling (spaced release cadence) and publishes to Instagram Reels automatically.
+        </div>
+        <div class="role-duties">
+          <div class="duty-item"><span>☁️</span> <strong>Cloud Native:</strong> Native publishAt scheduler (works with PC off)</div>
+          <div class="duty-item"><span>📱</span> <strong>Multi-Channel:</strong> YouTube Shorts & Instagram Reels</div>
+          <div class="duty-item"><span>🔗</span> <strong>Distribution Log:</strong> Real-time link verification & indexing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: CONTENT REWARDS & CAMPAIGN SUBMISSION -->
+  <div id="rewardsTab" class="tab-pane">
+    <div class="rewards-hero">
+      <div class="rewards-title">
+        <h2>Content Rewards & Campaign Bounties Tracker</h2>
+        <p>Direct tracking for all eligible clips to submit to ReachClipping and Content Reward programs for payouts.</p>
+      </div>
+      <div class="portal-badges">
+        <div class="portal-chip" style="border-color: rgba(255,180,0,0.5); color: #fbbf24">🎙️ Sponz.in (₹8,00,000 Raising ThemRight)</div>
+        <div class="portal-chip">🏆 ReachClipping ($2.5k AsianJeff GTA 6)</div>
+        <div class="portal-chip">💎 Content Rewards ($10k Kai Cenat)</div>
+        <div class="portal-chip">⚡ RUCKUS (Dasgasdom3)</div>
+      </div>
+    </div>
+
+    <div class="rewards-table-card">
+      <table class="rewards-table">
+        <thead>
+          <tr>
+            <th>Streamer / Campaign</th>
+            <th>Viral Clip Title</th>
+            <th>Portal Link</th>
+            <th>Submission Status</th>
+            <th>Rule Checklist</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rewardsTableBody">
+          <tr>
+            <td colspan="6" class="empty-state">Loading campaign submissions ledger...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script>
+    let allClips = [];
+    let currentCreatorFilter = 'all';
+    let rawLogs = [];
+
+    // Switch Tabs
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.add('active');
+      btn.classList.add('active');
+      if (tabId === 'terminalTab') {
+        const body = document.getElementById('terminalBody');
+        body.scrollTop = body.scrollHeight;
+      }
+    }
+
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    // 1-Click Storage Optimizer Cleanup
+    async function triggerCleanup(btn) {
+      if (!btn) btn = document.getElementById('cleanDiskBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '🧹 Cleaning...';
+      try {
+        const res = await fetch('/api/cleanup', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          const reclaimed = data.reclaimed_gb >= 0.05 ? `${data.reclaimed_gb} GB` : `${data.reclaimed_mb} MB`;
+          btn.innerHTML = `✓ ${reclaimed} Free!`;
+          showToast(`Storage Optimized: Reclaimed ${reclaimed} across ${data.cleaned_count} temporary files!`);
+          setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+          }, 3500);
+          refreshAllData();
+        } else {
+          showToast('Cleanup notice: ' + (data.error || 'System is already clean'));
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showToast('Storage cleanup error');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    }
+
+    // 1-Click Cloud Sync & Zero-PC Storage Offloading
+    async function triggerCloudSync(btn) {
+      if (!btn) btn = document.getElementById('cloudSyncBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '☁️ Offloading to Cloud...';
+      try {
+        const res = await fetch('/api/cloud/sync_all', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          btn.innerHTML = `✓ ${data.reclaimed_gb} GB Offloaded!`;
+          showToast(`Cloud Sync Complete: ${data.newly_synced} clips uploaded. Reclaimed ${data.reclaimed_gb} GB (${data.reclaimed_mb} MB) from your PC!`);
+          setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+          }, 3500);
+          refreshAllData();
+        } else {
+          showToast('Cloud notice: ' + (data.error || 'Failed to sync'));
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showToast('Cloud sync network error');
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+      }
+    }
+
+    // Copy Helper
+    async function copyText(text, btn, successMsg = 'Copied to clipboard!') {
+      try {
+        await navigator.clipboard.writeText(text);
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.classList.add('copied');
+          btn.innerHTML = '✓ Copied';
+          setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerHTML = orig;
+          }, 1800);
+        }
+        showToast(successMsg);
+      } catch (err) {
+        showToast('Failed to copy');
+      }
+    }
+
+    // Fetch Autonomous Status & Logs
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/autonomous/status');
+        const data = await res.json();
+        if (data.ok) {
+          if (data.recent_logs) {
+            rawLogs = data.recent_logs;
+            renderLogs(rawLogs);
+          }
+        }
+      } catch (err) {
+        console.error('Status fetch error:', err);
+      }
+    }
+
+    // Render Logs in Terminal
+    function renderLogs(logs) {
+      const body = document.getElementById('terminalBody');
+      if (!logs || logs.length === 0) {
+        body.innerHTML = '<div class="empty-state">No logs recorded yet.</div>';
+        return;
+      }
+
+      body.innerHTML = logs.map(line => {
+        let level = 'INFO';
+        if (line.includes('[WARNING]')) level = 'WARNING';
+        if (line.includes('[ERROR]')) level = 'ERROR';
+        
+        const cleanMsg = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<div class="log-line"><span class="log-level ${level}">[${level}]</span> <span class="log-msg">${cleanMsg}</span></div>`;
+      }).join('');
+
+      if (document.getElementById('autoScrollCheck').checked) {
+        body.scrollTop = body.scrollHeight;
+      }
+    }
+
+    function copyLogs() {
+      copyText(rawLogs.join('\n'), null, 'Terminal logs copied!');
+    }
+
+    // Load Staged Clips
+    async function loadClips() {
+      const grid = document.getElementById('clipsGrid');
+      try {
+        const res = await fetch('/api/staged_clips');
+        const clips = await res.json();
+        allClips = clips || [];
+        document.getElementById('totalStagedCount').innerText = allClips.length;
+        document.getElementById('clipsBadge').innerText = allClips.length;
+        renderClips();
+      } catch (err) {
+        grid.innerHTML = '<div class="empty-state">Error loading staged clips.</div>';
+      }
+    }
+
+    // Render Filtered Clips
+    function renderClips() {
+      const grid = document.getElementById('clipsGrid');
+      const search = document.getElementById('clipSearchInput').value.toLowerCase();
+
+      const filtered = allClips.filter(c => {
+        const creator = (c.target_creator || '').toLowerCase();
+        const title = (c.title || '').toLowerCase();
+        const id = (c.id || '').toLowerCase();
+
+        let matchFilter = true;
+        if (currentCreatorFilter === 'cloud') {
+          matchFilter = Boolean(c.is_cloud_hosted || c.cloud_url);
+        } else if (currentCreatorFilter !== 'all') {
+          matchFilter = creator.includes(currentCreatorFilter.toLowerCase()) || id.includes(currentCreatorFilter.toLowerCase());
+        }
+
+        const matchSearch = !search || 
+          title.includes(search) || 
+          creator.includes(search) || 
+          id.includes(search);
+
+        return matchFilter && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="empty-state">No clips found matching your filters.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(c => {
+        const clipId = c.id || c.folder_name;
+        const vidUrl = c.video_url || `/api/staged_clips/${clipId}/video`;
+        const thumbUrl = c.thumb_url || `/api/staged_clips/${clipId}/thumbnail`;
+        const score = c.score || 92;
+        const creator = c.target_creator || 'Gaming Streamer';
+        const title = c.title || 'Viral Gaming Clip';
+        const isCloud = Boolean(c.is_cloud_hosted || c.cloud_url);
+
+        return `
+          <div class="clip-card">
+            <div class="clip-media-wrap">
+              <video class="clip-video" controls preload="none" poster="${thumbUrl}" playsinline>
+                <source src="${vidUrl}" type="video/mp4">
+              </video>
+              <div class="clip-badges">
+                <div class="score-badge">🔥 Score: ${score}</div>
+                <div class="time-badge">1080x1920 • 60fps</div>
+                ${isCloud ? '<div class="time-badge" style="background:rgba(6,182,212,0.3);color:#38bdf8;border-color:rgba(56,189,248,0.4)">☁️ Cloud CDN</div>' : ''}
+              </div>
+            </div>
+            <div class="clip-content">
+              <div class="clip-creator-tag">
+                <span>${creator.toLowerCase().includes('raising') ? '🎙️' : '🎮'}</span>
+                <span>${creator}</span>
+              </div>
+              <div class="clip-title" title="${title}">${title}</div>
+              <div class="schedule-info">
+                <span>🛡️</span>
+                <span>Staged Safely · Auto-Posting Frozen</span>
+              </div>
+              <div class="clip-actions">
+                <a href="${c.cloud_download_url || vidUrl}" target="_blank" download="${c.title || 'clip'}.mp4" class="copy-btn" style="text-align:center;text-decoration:none;color:#38bdf8;border-color:rgba(56,189,248,0.4);background:rgba(56,189,248,0.08);font-weight:700;">
+                  ⬇️ Download
+                </a>
+                <button class="copy-btn" onclick="copyText('${c.cloud_url || vidUrl}', this, 'Direct Video Link copied!')">
+                  🔗 Link
+                </button>
+                <button class="copy-btn" onclick="copyYoutubeMeta('${clipId}', this)">
+                  📋 Copy YT
+                </button>
+                <button class="copy-btn" onclick="copyInstagramMeta('${clipId}', this)">
+                  📸 Copy IG
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setCreatorFilter(creator, btn) {
+      currentCreatorFilter = creator;
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderClips();
+    }
+
+    function filterClips() {
+      renderClips();
+    }
+
+    function copyYoutubeMeta(clipId, btn) {
+      const c = allClips.find(x => (x.id || x.folder_name) === clipId);
+      if (!c) return;
+      const text = `${c.title}\n\n${c.description}`;
+      copyText(text, btn, 'YouTube title & description copied!');
+    }
+
+    function copyInstagramMeta(clipId, btn) {
+      const c = allClips.find(x => (x.id || x.folder_name) === clipId);
+      if (!c) return;
+      copyText(c.description || c.title, btn, 'Instagram caption copied!');
+    }
+
+    function copyLiveLink(url, btn) {
+      if (!url || url.includes('Pending')) {
+        showToast('Link pending: clip staged in review queue');
+        return;
+      }
+      copyText(url, btn, 'Live link copied!');
+    }
+
+    // Load Content Rewards Hub
+    async function loadContentRewards() {
+      const tbody = document.getElementById('rewardsTableBody');
+      try {
+        const res = await fetch('/api/content_rewards');
+        const data = await res.json();
+        const subs = data.submissions || [];
+        window.currentSubmissions = subs;
+        document.getElementById('rewardsBadge').innerText = subs.length;
+
+        if (subs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No submissions logged yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = subs.map(s => {
+          const ytLink = s.youtube_link ? `<a href="${s.youtube_link}" target="_blank" style="color: var(--cyan); text-decoration: underline;">YouTube Short</a>` : '<span style="color: var(--dim)">Pending</span>';
+          const igLink = s.instagram_reel ? `<a href="${s.instagram_reel}" target="_blank" style="color: var(--ig); text-decoration: underline;">IG Reel</a>` : '<span style="color: var(--dim)">Pending</span>';
+          
+          return `
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #fff;">${s.creator}</div>
+                <div style="font-size: 11px; color: var(--muted);">${s.campaign}</div>
+              </td>
+              <td style="max-width: 260px;">
+                <div style="font-weight: 600; color: #e2e8f0; font-size: 13px;">${s.title}</div>
+                <div style="font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; margin-top: 2px;">${s.clip_id}</div>
+              </td>
+              <td>
+                <div style="font-weight: 700; color: var(--cyan);">${s.portal}</div>
+                <div style="font-size: 11px; display: flex; gap: 8px; margin-top: 4px;">
+                  ${ytLink} • ${igLink}
+                </div>
+              </td>
+              <td>
+                <span class="status-badge uploaded">✓ Uploaded & Verified</span>
+              </td>
+              <td>
+                <div style="font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 2px;">
+                  <span>✓ Transformative Hook</span>
+                  <span>✓ Zero Bounty Jargon</span>
+                  <span>✓ Streamer Credit (@${s.creator})</span>
+                </div>
+              </td>
+              <td>
+                <button class="btn" style="padding: 6px 12px; font-size: 11px;" onclick="copyLiveLink('${s.youtube_link || s.instagram_reel}', this)">
+                  🔗 Copy Live Link
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading rewards table.</td></tr>';
+      }
+    }
+
+    function refreshAllData() {
+      fetchStatus();
+      loadClips();
+      loadContentRewards();
+      showToast('Dashboard refreshed');
+    }
+
+    // Auto-refresh interval (every 4 seconds for logs & status)
+    setInterval(() => {
+      fetchStatus();
+    }, 4000);
+
+    // Initial load
+    fetchStatus();
+    loadClips();
+    loadContentRewards();
+  </script>
+</body>
+</html>

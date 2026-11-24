@@ -105,12 +105,13 @@ def _ydl(opts):
     import yt_dlp
     # a channel or playlist link is answered as "a list" straight away, never walked video by video
     return yt_dlp.YoutubeDL({"noplaylist": True, "quiet": True, "no_warnings": True, "logger": _Quiet(),
-                             "extract_flat": "in_playlist", "playlistend": 1, "socket_timeout": 20,
+                             "extract_flat": "in_playlist", "playlistend": 1, "socket_timeout": 60,
+                             "retries": 10, "fragment_retries": 10,
                              "concurrent_fragment_downloads": 4, **cookie_opts(), **opts})
 
 
 def _video_format(height):
-    return f"bv*[height<={height}][vcodec^=avc1]+ba[ext=m4a]/bv*[height<={height}]+ba/b[height<={height}]/b"
+    return f"bv*[height<={height}]+ba/b[height<={height}]/bv*+ba/b"
 
 
 def _biggest(job_dir: Path, stem: str) -> Path:

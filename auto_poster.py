@@ -16,8 +16,14 @@ from studio import uploader
 logger = logging.getLogger("AutoPoster")
 
 
+# User Directive: DO NOT POST, JUST START MAKING
+POSTING_PAUSED = True
+
 def post_next_due() -> bool:
     """Invokes official uploader to process review queue under strict rights verification."""
+    if POSTING_PAUSED:
+        logger.info("AutoPoster: Posting is strictly PAUSED per user directive ('do not post just start making'). Zero uploads executed.")
+        return False
     try:
         uploader.process_review_queue()
         return True

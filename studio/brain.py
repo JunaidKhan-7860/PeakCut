@@ -80,6 +80,36 @@ Never put links, @handles, phone numbers, or "visit / buy / subscribe" calls in 
 </transcript>
 """
 
+PODCAST_HEAD = """You are an elite short-form content curator for viral educational and parenting podcasts (YouTube Shorts, Reels, TikTok).
+Below is a timestamped transcript of a podcast episode. Each line starts with [seconds].
+
+Video title: {title}
+Channel: {uploader}
+
+Pick up to {n} profound, high-impact, standalone moments that would make viewers stop scrolling and learn something valuable:
+surprising facts (e.g. 90% of brain development occurs before age 5), eye-opening parenting insights, cognitive science explanations, practical advice for parents, or memorable emotional revelations.
+"""
+
+PODCAST_RULES = """
+Rules:
+- Each clip is {min_len} to {max_len} seconds. Use the [seconds] values for start and end.
+- Standalone Context: Start cleanly on a clear thought, question, or key statement. End on the final word of a complete thought or punchy insight. The clip must make complete sense on its own.
+- Do not pick intros, sponsor reads, "like and subscribe", or dead air.
+- score: 70-100, how valuable, insightful, or engaging this moment is for viewers.
+- hook: at most 5 words, ALL CAPS, high curiosity gap, ending with an emoji (🧠, 💡, 👶, 🌟, 🤯). Examples: "LISTEN TO THIS 💡", "WHY AGES 0-5 MATTER 🧠", "SHOCKING BRAIN FACT 🤯", "DON'T MISS THIS 🌟".
+- title: at most 65 characters. Clear, high-CTR educational title.
+- description: one or two sentences with context. MUST use the word 'children', NEVER use 'kids'.
+- hashtags: 5 tags without the # sign (e.g. RaisingThemRight, Parenting, EarlyChildhood, BrainDevelopment, Shorts).
+- highlight_words: 3 to 6 impactful words spoken in the clip.
+- Write hook, title, description, hashtags and highlight_words in English.
+- category: one of take, story, other.
+- reason: one short sentence on why it works.
+{language}
+<transcript>
+{transcript}
+</transcript>
+"""
+
 
 ARABIC_SCRIPT = re.compile(r"[؀-ۿ]")
 ARABIC_NOTE = ("- The transcript is in Arabic letters. Speakers often mix in English words, which the speech model "
@@ -292,9 +322,18 @@ def fallback_by_loudness(db, words, n, max_len, duration):
             continue
         if not any(s <= w["s"] <= e for w in words):
             continue
-        picks.append({"start": s, "end": e, "score": 50, "category": "other", "hook": "WAIT FOR IT",
-                      "title": "Loud moment", "description": "", "hashtags": [], "highlight_words": [],
-                      "reason": "Picked by loudness because the AI was unavailable."})
+        viral_loud_titles = [
+            "Bro Lost His Entire Mind 😭",
+            "Nobody Expected This Reaction 💀",
+            "He Was NOT Ready For This 😭",
+            "The Most Insane Stream Reaction 🤯",
+            "Watch What Happens Right Here 💀",
+            "His Entire Chat Went Crazy 😱"
+        ]
+        chosen_title = viral_loud_titles[len(picks) % len(viral_loud_titles)]
+        picks.append({"start": s, "end": e, "score": 75, "category": "shock", "hook": "WAIT FOR IT... 👀",
+                      "title": chosen_title, "description": "Streamer lost control during this crazy moment!", "hashtags": ["gaming", "viral", "fyp", "shorts"], "highlight_words": [],
+                      "reason": "Peak reaction loudness detected during speech."})
         if len(picks) >= n:
             break
     return picks
@@ -321,14 +360,29 @@ def find_clips(words, db, duration, title="", uploader="", max_clips=6, min_len=
         windows.append((t, min(duration, t + WINDOW_SEC)))
         t += WINDOW_SEC - OVERLAP_SEC
     per_window = max(2, min(8, int(np.ceil(max_clips * 1.5 / len(windows))) + 1))
-    extra = _game_rules(game)
+
+    is_podcast = (
+        "podcast" in str(title).lower()
+        or "raising" in str(uploader).lower()
+        or "why ages" in str(title).lower()
+        or game == "podcast"
+    )
+    head_tmpl = PODCAST_HEAD if is_podcast else HEAD
+    extra = "" if is_podcast else _game_rules(game)
+
     for a, b in windows:
         chunk = [l for l in lines if a <= l["s"] < b]
         if len(chunk) < 3:
             continue
-        prompt = (HEAD.format(title=_safe(title) or "unknown", uploader=_safe(uploader) or "unknown", n=per_window)
-                  + extra
-                  + _rules(min_len, max_len, _fmt(chunk)))
+        if is_podcast:
+            fmt_chunk = _fmt(chunk)
+            note_lang = ARABIC_NOTE if len(ARABIC_SCRIPT.findall(fmt_chunk)) > 40 else ""
+            prompt = (head_tmpl.format(title=_safe(title) or "unknown", uploader=_safe(uploader) or "unknown", n=per_window)
+                      + PODCAST_RULES.format(min_len=min_len, max_len=max_len, transcript=fmt_chunk, language=note_lang))
+        else:
+            prompt = (head_tmpl.format(title=_safe(title) or "unknown", uploader=_safe(uploader) or "unknown", n=per_window)
+                      + extra
+                      + _rules(min_len, max_len, _fmt(chunk)))
         try:
             out, used_model, spent = ask_ai(prompt, purpose="Video: finding clips")
             tokens += spent
@@ -349,6 +403,23 @@ def find_clips(words, db, duration, title="", uploader="", max_clips=6, min_len=
         clips.append(_tidy(c, s, e, game))
         if len(clips) >= max_clips:
             break
+
+    # Fallback if AI returned no clips or filtered everything out:
+    if not clips and lines:
+        log("No clips passed filter from AI response; falling back to high-energy speech/audio peaks.")
+        fallback_cands = fallback_by_loudness(db, words, max_clips, max_len, duration)
+        for c in sorted(fallback_cands, key=lambda c: -_num(c.get("score"))):
+            s, e = _snap(c, lines, words, min_len, max_len, duration)
+            if e - s < min(min_len, duration) - 1:
+                continue
+            if _overlaps(s, e, clips):
+                continue
+            clips.append(_tidy(c, s, e, game))
+            if len(clips) >= max_clips:
+                break
+        if clips:
+            note = "Clips selected by speech & energy peaks."
+
     clips.sort(key=lambda c: c["start"])
     return clips, {"model": used_model, "tokens": tokens, "note": note}
 

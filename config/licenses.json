@@ -6,40 +6,122 @@
       "owner": "Local Test Clip",
       "documentation": "Self-generated royalty-free benchmark video.",
       "approved_at": 1795245000
-    },
-    "General Gaming Highlights": {
-      "status": "approved",
-      "license_id": "GROWTH-GAMING-ORIGINAL-001",
-      "owner": "Gaming Clip Channel",
-      "documentation": "Curated transformative gaming highlights with hook pacing, bouncing kinetic subtitles, and audio ducking.",
-      "approved_at": 1795259000
     }
   },
   "campaign_agreements": {
-    "Kai Cenat": {
-      "campaign_id": "Kai Cenat GTA 6 Marathon",
-      "terms": "Sourced from Kai Cenat GTA 6 marathon, Kai as main focus, #KaiCenat",
-      "verified": true,
-      "notes": "Authorized for direct public release under Kai Cenat campaign terms."
-    },
     "AsianJeff": {
       "campaign_id": "AsianJeff_Nov19",
+      "repost_permission": "explicit_campaign_license",
       "terms": "Sourced from AsianJeff GTA 6 playthrough Nov 19+, #AsianJeff, non-negative, no logos",
       "verified": true,
-      "notes": "Authorized for direct public release under ReachClipping terms."
+      "notes": "Documented campaign license explicitly allowing reposting on Gamingclip under ReachClipping terms."
     },
     "Dasgasd3m": {
       "campaign_id": "Dasgasd3m x RUCKUS $1K",
+      "repost_permission": "explicit_campaign_license",
       "terms": "Nov 18+ stream, #dasgasdom3, credit Watch Dom live on kick.com/dasgasd3m",
       "verified": true,
-      "notes": "Authorized for direct public release under RUCKUS campaign terms."
+      "notes": "Documented campaign license explicitly allowing reposting on Gamingclip under RUCKUS terms."
+    },
+    "Raising ThemRight": {
+      "campaign_id": "606aef7a-79c1-4c91-b8d7-f990baed2d99",
+      "repost_permission": "explicit_campaign_license",
+      "platform": "sponz",
+      "terms": "Sourced from 'Why ages 0-5 matter more than you think' (MRtF_rBADpQ). Use 'children' not 'kids'. Mention Raising ThemRight + CTA to full episode.",
+      "verified": true,
+      "notes": "Documented Sponz campaign agreement for dedicated educational channel."
+    },
+    "Kai Cenat": {
+      "campaign_id": "Kai Cenat GTA 6 Marathon",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from Kai Cenat GTA 6 marathon, Kai as main focus, #KaiCenat",
+      "verified": false,
+      "notes": "Creator tag and source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
     },
     "Dylan Page": {
       "campaign_id": "Dylan Page GTA VI Marathon",
+      "repost_permission": "unverified_awaiting_documentation",
       "terms": "#DylanPage",
-      "verified": true,
-      "notes": "Authorized for direct public release."
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "CarryisLive": {
+      "campaign_id": "CarryisLive GTA 6 Series",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official @CarryisLive streams. #CarryisLive #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "CarryMinati": {
+      "campaign_id": "CarryisLive GTA 6 Series",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official @CarryisLive streams. #CarryisLive #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Techno Gamerz": {
+      "campaign_id": "Techno Gamerz GTA 6 Episodes",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official @TechnoGamerzOfficial episodes. #TechnoGamerz #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Total Gaming": {
+      "campaign_id": "Total Gaming GTA 6 Highlights",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official @TotalGaming093 gameplay. #TotalGaming #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Casetoo": {
+      "campaign_id": "Casetoo GTA 6 Live",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official Casetoo streams. #Casetoo #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Mythpat": {
+      "campaign_id": "Mythpat GTA 6 Vice City",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official Mythpat streams. #Mythpat #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "IShowSpeed": {
+      "campaign_id": "IShowSpeed GTA 6 Playthrough",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official IShowSpeed streams. #IShowSpeed #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "ohnepixel": {
+      "campaign_id": "ohnepixel GTA 6 Playthrough",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official ohnepixel streams. #ohnepixel #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Live Insaan": {
+      "campaign_id": "Live Insaan GTA Highlights",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official Live Insaan streams. #LiveInsaan #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Dynamo Gaming": {
+      "campaign_id": "Dynamo Gaming GTA Highlights",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official Dynamo Gaming live streams. #DynamoGaming #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
+    },
+    "Mortal": {
+      "campaign_id": "Soul Mortal GTA Highlights",
+      "repost_permission": "unverified_awaiting_documentation",
+      "terms": "Sourced from official Mortal live streams. #Mortal #GTA6",
+      "verified": false,
+      "notes": "Source credit provided, but credit alone is not permission. Left as PRIVATE in Review Queue awaiting written agreement."
     }
   },
-  "default_policy": "allow_campaign_and_verified"
+  "default_policy": "explicit_written_permission_required"
 }

@@ -56,16 +56,18 @@ def check_rights(creator_id: str, campaign_name: str = "") -> Tuple[bool, str, D
             return True, f"Verified direct license on file: {entry.get('license_id', 'Direct')}", entry
             
     # 2. Campaign bounty authorization
-    # If the creator is part of an official sponsored campaign (e.g., ReachClipping / RUCKUS),
-    # verify that the campaign terms and license documentation have been explicitly confirmed.
+    # Must have explicit written permission or a confirmed campaign license allowing reposting on Gamingclip.
     for c_key, c_info in campaigns.items():
         if (c_key.lower() in creator_id.lower() or c_key.lower() in campaign_name.lower()) and c_info.get("verified"):
-            return True, f"Verified campaign bounty authorization: {c_info.get('campaign_id')}", c_info
-            
+            if c_info.get("repost_permission") == "explicit_campaign_license":
+                return True, f"Verified campaign license on file: {c_info.get('campaign_id')}", c_info
+            else:
+                return False, f"Source credit on file for '{creator_id}', but credit alone is not permission. Documented written permission or campaign license explicitly allowing reposting on Gamingclip is required.", c_info
+
     # 3. Not verified - enforce hard policy
     reason = (
-        f"Source creator '{creator_id}' does not have a verified license or documented written permission on file. "
-        "Edits and captions alone do not confer rights. Clip routed to local review queue."
+        f"Source creator '{creator_id}' does not have documented written permission or a campaign license explicitly allowing reposting on Gamingclip. "
+        "Creator tag and source credit are required, but credit alone is not permission. Clip kept PRIVATE in Review Queue."
     )
     return False, reason, {}
 

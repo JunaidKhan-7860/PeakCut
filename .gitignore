@@ -20,9 +20,10 @@ storage.json
 CLAUDE.local.md
 .vscode/
 .idea/
-*.bat
 Thumbs.db
 .DS_Store
+scratch/
+check_*.py
 
 # ---- Python
 __pycache__/
@@ -36,4 +37,3 @@ config/credentials/
 chrome_bot_profile/
 viral_exports/
 *.exe
-

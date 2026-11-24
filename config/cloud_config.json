@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "zero_pc_storage": true,
+  "provider": "managed_cdn",
+  "auto_upload_on_render": true,
+  "purge_local_after_upload": true,
+  "purge_raw_vods_immediately": true,
+  "custom_s3": {
+    "enabled": false,
+    "endpoint_url": "",
+    "bucket_name": "",
+    "access_key": "",
+    "secret_key": "",
+    "public_base_url": ""
+  },
+  "google_drive": {
+    "enabled": false,
+    "folder_id": ""
+  }
+}

@@ -12,22 +12,22 @@ W, H = config.OUT_W, config.OUT_H
 
 # ASS colours are &HBBGGRR. `size` is the ASS font size (line height); _Font turns it into real pixels.
 STYLES = {
-    "bounce": {"label": "Bounce (Classic Gold)", "font": "Poppins ExtraBold", "size": 132, "base": "FFFFFF", "active": "00F0FF",
-               "strong": "FFFFFF", "outline": 7, "pop": 112, "upper": True, "per": 3},
-    "hype": {"label": "Hype (Red / Amber)", "font": "Anton", "size": 152, "base": "FFFFFF", "active": "3C3CFF",
-             "strong": "00D7FF", "outline": 7, "pop": 114, "upper": True, "per": 2},
-    "beast": {"label": "MrBeast Viral (Gold & Toxic Green)", "font": "Archivo Black", "size": 140, "base": "FFFFFF", "active": "00EAFF",
-              "strong": "14FF39", "outline": 9, "pop": 126, "upper": True, "per": 2},
-    "neon": {"label": "Cyber Neon (Cyan & Pink Glow)", "font": "Poppins ExtraBold", "size": 130, "base": "FFFFFF", "active": "FFFF00",
-             "strong": "EA00FF", "outline": 8, "pop": 118, "upper": True, "per": 3},
-    "fire": {"label": "Flame (Fire Red & Golden Ember)", "font": "Anton", "size": 154, "base": "FFFFFF", "active": "0055FF",
-             "strong": "00EAFF", "outline": 8, "pop": 122, "upper": True, "per": 2},
-    "tiktok": {"label": "TikTok Viral (Lime & White)", "font": "Poppins ExtraBold", "size": 128, "base": "FFFFFF", "active": "14FF39",
-               "strong": "00F0FF", "outline": 7, "pop": 116, "upper": True, "per": 3},
-    "comic": {"label": "Comic Pop (Bold Comic Yellow)", "font": "Archivo Black", "size": 136, "base": "FFFFFF", "active": "00EAFF",
-              "strong": "2222FF", "outline": 10, "pop": 120, "upper": True, "per": 3},
-    "clean": {"label": "Clean Minimal", "font": "Poppins ExtraBold", "size": 100, "base": "FFFFFF", "active": "6BD7FF",
-              "strong": "FFFFFF", "outline": 5, "pop": 106, "upper": False, "per": 4},
+    "bounce": {"label": "Bounce (Classic Gold)", "font": "Poppins ExtraBold", "size": 78, "base": "FFFFFF", "active": "00F0FF",
+               "strong": "FFFFFF", "outline": 4, "pop": 108, "upper": True, "per": 3},
+    "hype": {"label": "Hype (Red / Amber)", "font": "Anton", "size": 82, "base": "FFFFFF", "active": "3C3CFF",
+             "strong": "00D7FF", "outline": 4, "pop": 110, "upper": True, "per": 2},
+    "beast": {"label": "MrBeast Viral (Gold & Toxic Green)", "font": "Archivo Black", "size": 80, "base": "FFFFFF", "active": "00EAFF",
+              "strong": "14FF39", "outline": 5, "pop": 110, "upper": True, "per": 2},
+    "neon": {"label": "Cyber Neon (Cyan & Pink Glow)", "font": "Poppins ExtraBold", "size": 78, "base": "FFFFFF", "active": "FFFF00",
+             "strong": "EA00FF", "outline": 4, "pop": 108, "upper": True, "per": 3},
+    "fire": {"label": "Flame (Fire Red & Golden Ember)", "font": "Anton", "size": 82, "base": "FFFFFF", "active": "0055FF",
+             "strong": "00EAFF", "outline": 4, "pop": 110, "upper": True, "per": 2},
+    "tiktok": {"label": "TikTok Viral (Lime & White)", "font": "Poppins ExtraBold", "size": 78, "base": "FFFFFF", "active": "14FF39",
+               "strong": "00F0FF", "outline": 4, "pop": 108, "upper": True, "per": 3},
+    "comic": {"label": "Comic Pop (Bold Comic Yellow)", "font": "Archivo Black", "size": 80, "base": "FFFFFF", "active": "00EAFF",
+              "strong": "2222FF", "outline": 5, "pop": 110, "upper": True, "per": 3},
+    "clean": {"label": "Clean Minimal", "font": "Poppins ExtraBold", "size": 72, "base": "FFFFFF", "active": "6BD7FF",
+               "strong": "FFFFFF", "outline": 3, "pop": 105, "upper": False, "per": 3},
 }
 HOOK_THEMES = {
     "white": {"label": "Classic White Pill", "ink": "14100E", "box": "FFFFFF"},
@@ -36,10 +36,10 @@ HOOK_THEMES = {
     "dark": {"label": "Dark Mode Minimal", "ink": "FFFFFF", "box": "1C1917"},
     "fire": {"label": "Hot Crimson Pill", "ink": "FFFFFF", "box": "0033CC"},
 }
-HOOK = {"font": "Poppins ExtraBold", "size": 96, "ink": "14100E", "box": "FFFFFF", "pad_x": 36, "pad_y": 22, "radius": 26,
-        "max_w": 900}
+HOOK = {"font": "Poppins ExtraBold", "size": 82, "ink": "14100E", "box": "FFFFFF", "pad_x": 30, "pad_y": 18, "radius": 22,
+        "max_w": 820}
 FONT_FILES = {"Poppins ExtraBold": "Poppins-ExtraBold.ttf", "Anton": "Anton-Regular.ttf", "Archivo Black": "ArchivoBlack-Regular.ttf"}
-CAP_MAX_W = 960   # captions never run wider than this, whatever is said
+CAP_MAX_W = 760   # captions never run wider than this, keeping 70% screen width max
 
 
 class _Font:
@@ -95,11 +95,13 @@ def install_fonts():
             shutil.copyfile(f, config.FONTS_DIR / f.name)
 
 
-LAYOUTS = {"blur": "Full frame + blurred fill", "zoom": "Zoomed in + blurred fill", "crop": "Fill the screen (centre crop)",
+LAYOUTS = {"auto": "Smart layout (Reaction stacked if facecam present, else crop)",
+           "blur": "Full frame + blurred fill", "zoom": "Zoomed in + blurred fill", "crop": "Fill the screen (centre crop)",
            "left": "Fill the screen, keep the left side", "right": "Fill the screen, keep the right side",
            "fit": "Full frame on black", "split": "Split screen: left half on top, right half below (two people)",
-           "gameplay": "Gameplay fills the screen, facecam in the corner"}
-_FILLS = ("crop", "left", "right", "gameplay")      # layouts where the picture covers the whole frame
+           "gameplay": "Gameplay fills the screen, facecam in the corner",
+           "stacked": "Stacked reaction: Facecam on top, gameplay below"}
+_FILLS = ("crop", "left", "right", "gameplay", "stacked", "auto")      # layouts where the picture covers the whole frame
 
 
 def _ts(t):
@@ -142,8 +144,10 @@ def geometry(src_w, src_h, layout):
     else:
         fg_h = H
     top = (H - fg_h) // 2
+    if layout == "stacked":
+        return layout, H, 240, 860
     if layout in _FILLS:
-        return layout, fg_h, 300, 1380
+        return layout, fg_h, 300, 1540
     if layout == "split":
         return layout, fg_h, 230, H // 2        # captions sit on the line between the two people
     return layout, fg_h, max(230, top - 190), min(1640, top + fg_h + 180)
@@ -175,8 +179,9 @@ def _teaser_hook_events(text, dur, y=360):
     ]
 
 
-def _hook_events(hook, dur, y, theme_name="white", start_t=0.0):
-    """The heading: text in a rounded box that fits it, on one line or two balanced ones."""
+def _hook_events(hook, dur, y, theme_name="white", start_t=0.0, show_sec=2.4):
+    """The heading: text in a rounded box that fits it, on one line or two balanced ones.
+    Shows for an initial attention-grabbing window (2.4s), then smoothly fades out so the video is clean."""
     theme = HOOK_THEMES.get(theme_name, HOOK_THEMES["white"])
     ink_color = theme["ink"]
     box_color = theme["box"]
@@ -201,16 +206,18 @@ def _hook_events(hook, dur, y, theme_name="white", start_t=0.0):
            f"l {n(x1)} {n(y1 - r)} b {n(x1)} {n(y1)} {n(x1)} {n(y1)} {n(x1 - r)} {n(y1)} "
            f"l {n(x0 + r)} {n(y1)} b {n(x0)} {n(y1)} {n(x0)} {n(y1)} {n(x0)} {n(y1 - r)} "
            f"l {n(x0)} {n(y0 + r)} b {n(x0)} {n(y0)} {n(x0)} {n(y0)} {n(x0 + r)} {n(y0)}")
-    span = f"{_ts(start_t)},{_ts(dur)}"
-    ev = [f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0)\\fad(160,0)\\c&H{box_color}&\\p1}}{box}{{\\p0}}"]
+    end_t = min(dur, start_t + show_sec)
+    span = f"{_ts(start_t)},{_ts(end_t)}"
+    ev = [f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0)\\fad(120,450)\\c&H{box_color}&\\p1}}{box}{{\\p0}}"]
     for i, line in enumerate(lines):
         cy = y - line_h * (len(lines) - 1) / 2 + i * line_h - f.cap_shift(size)
-        ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{\\an5\\pos({W // 2},{cy:.0f})\\fad(160,0)\\fs{size}\\c&H{ink_color}&}}{line}")
+        ev.append(f"Dialogue: 4,{span},Hook,,0,0,0,,{{\\an5\\pos({W // 2},{cy:.0f})\\fad(120,450)\\fs{size}\\c&H{ink_color}&}}{line}")
     return ev
 
 
-def _corner_tag_events(tag_text, dur, pos="top-left"):
-    """Optional subtle frosted pill watermark in the corner (e.g. '🔴 Kai Cenat' or 'Watch @Streamer')."""
+def _corner_tag_events(tag_text, dur, pos="top-left", show_sec=2.6):
+    """Optional subtle frosted pill watermark in the corner (e.g. '🔴 Kai Cenat' or 'Watch @Streamer').
+    Fades out after 2.6s so it doesn't clutter the rest of the video."""
     if not tag_text or not str(tag_text).strip():
         return []
     text = _clean(tag_text)
@@ -231,10 +238,11 @@ def _corner_tag_events(tag_text, dur, pos="top-left"):
            f"l {n(x1)} {n(y1 - r)} b {n(x1)} {n(y1)} {n(x1)} {n(y1)} {n(x1 - r)} {n(y1)} "
            f"l {n(x0 + r)} {n(y1)} b {n(x0)} {n(y1)} {n(x0)} {n(y1)} {n(x0)} {n(y1 - r)} "
            f"l {n(x0)} {n(y0 + r)} b {n(x0)} {n(y0)} {n(x0)} {n(y0)} {n(x0 + r)} {n(y0)}")
-    span = f"{_ts(0)},{_ts(dur)}"
+    end_t = min(dur, show_sec)
+    span = f"{_ts(0)},{_ts(end_t)}"
     return [
-        f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0)\\fad(200,200)\\1a&H40&\\c&H14100E&\\p1}}{box}{{\\p0}}",
-        f"Dialogue: 4,{span},Hook,,0,0,0,,{{\\an5\\pos({n(x0 + bw / 2)},{n(y0 + bh / 2 - f.cap_shift(size))})\\fad(200,200)\\fs{size}\\c&HFFFFFF&}}{text}"
+        f"Dialogue: 3,{span},Hook,,0,0,0,,{{\\an7\\pos(0,0)\\fad(120,450)\\1a&H40&\\c&H14100E&\\p1}}{box}{{\\p0}}",
+        f"Dialogue: 4,{span},Hook,,0,0,0,,{{\\an5\\pos({n(x0 + bw / 2)},{n(y0 + bh / 2 - f.cap_shift(size))})\\fad(120,450)\\fs{size}\\c&HFFFFFF&}}{text}"
     ]
 
 
@@ -278,12 +286,12 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     ev = []
     if teaser_hook and t_offset > 0:
         ev += _teaser_hook_events(teaser_text or "WAIT FOR IT... 👀", t_offset, hook_y)
-        ev += _hook_events(_clean(hook), total_dur, hook_y, hook_theme, start_t=t_offset)
+        ev += _hook_events(_clean(hook), total_dur, hook_y, hook_theme, start_t=t_offset, show_sec=2.4)
     else:
-        ev += _hook_events(_clean(hook), total_dur, hook_y, hook_theme, start_t=0.0)
+        ev += _hook_events(_clean(hook), total_dur, hook_y, hook_theme, start_t=0.0, show_sec=2.4)
 
     if corner_tag:
-        ev += _corner_tag_events(corner_tag, total_dur)
+        ev += _corner_tag_events(corner_tag, total_dur, show_sec=2.6)
     if progress_bar:
         bar_color = st.get("active", "00F0FF")
         ev += _progress_bar_events(total_dur, bar_color)
@@ -338,23 +346,41 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return head + "\n".join(ev) + "\n"
 
 
-PIP_W = 380            # how wide the facecam is in the 1080-wide frame
-PIP_MARGIN = 26
+PIP_W = 440            # how wide the facecam is in the 1080-wide frame
+PIP_MARGIN = 24
 
 
 def _filter(layout, fg_h, facecam=None, punch_zoom=True, vin="0:v", vout="v0"):
     pfx = vin.replace(":", "_")
     zoom_crop = ",crop=w='if(lt(t,2.2),in_w/1.14,in_w)':h='if(lt(t,2.2),in_h/1.14,in_h)':x='(in_w-out_w)/2':y='(in_h-out_h)/2',scale="
+    scale_hd = "force_original_aspect_ratio=increase:flags=lanczos+accurate_rnd"
+    clarity = ",unsharp=lx=5:ly=5:la=0.65:cx=5:cy=5:ca=0.25,eq=contrast=1.05:saturation=1.08"
+
+    # 1. STACKED FACECAM + GAMEPLAY (Top 42% Streamer Reaction, Bottom 58% Gameplay)
+    if layout in ("stacked", "streamer"):
+        top_h = 820
+        bot_h = H - top_h  # 1100
+        if facecam and len(facecam) == 4 and int(facecam[2]) > 8 and int(facecam[3]) > 8:
+            fx, fy, fw, fh = (int(v) for v in facecam)
+            fc_crop = f"crop={fw}:{fh}:{fx}:{fy},"
+        else:
+            fc_crop = "crop=iw/2:ih/2:0:0,"
+        zoom_top = f"{zoom_crop}{W}:{top_h}" if punch_zoom else ""
+        return (f"[{vin}]fps={config.OUT_FPS},split=2[{pfx}_t_src][{pfx}_b_src];"
+                f"[{pfx}_t_src]{fc_crop}scale={W}:{top_h}:{scale_hd},crop={W}:{top_h},setsar=1{clarity}{zoom_top}[{pfx}_t];"
+                f"[{pfx}_b_src]scale={W}:{bot_h}:{scale_hd},crop={W}:{bot_h},setsar=1{clarity}[{pfx}_b];"
+                f"[{pfx}_t][{pfx}_b]vstack,setsar=1[{vout}];")
+
     if layout == "gameplay" and facecam:
         fx, fy, fw, fh = (int(v) for v in facecam)
         if fw > 8 and fh > 8:
             pip_h = max(2, int(round(PIP_W * fh / fw)))
             base_zoom = f"{zoom_crop}{W}:{H}" if punch_zoom else ""
             return (f"[{vin}]fps={config.OUT_FPS},split=2[{pfx}_base][{pfx}_fc];"
-                    f"[{pfx}_base]scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setsar=1{base_zoom}[{pfx}_b];"
-                    f"[{pfx}_fc]crop={fw}:{fh}:{fx}:{fy},scale={PIP_W}:{pip_h},setsar=1[{pfx}_p];"
+                    f"[{pfx}_base]scale={W}:{H}:{scale_hd},crop={W}:{H},setsar=1{clarity}{base_zoom}[{pfx}_b];"
+                    f"[{pfx}_fc]crop={fw}:{fh}:{fx}:{fy},scale={PIP_W}:{pip_h}:{scale_hd},setsar=1{clarity}[{pfx}_p];"
                     f"[{pfx}_b][{pfx}_p]overlay={W - PIP_W - PIP_MARGIN}:{PIP_MARGIN}[{vout}];")
-    fill = f"[{vin}]fps={config.OUT_FPS},scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}"
+    fill = f"[{vin}]fps={config.OUT_FPS},scale={W}:{H}:{scale_hd},crop={W}:{H}{clarity}"
     zoom_str = f"{zoom_crop}{W}:{H}" if punch_zoom else ""
     if layout == "crop" or (layout == "gameplay" and not facecam):
         return f"{fill},setsar=1{zoom_str}[{vout}];"
@@ -363,22 +389,24 @@ def _filter(layout, fg_h, facecam=None, punch_zoom=True, vin="0:v", vout="v0"):
     if layout == "right":
         return f"{fill}:in_w-out_w:0,setsar=1{zoom_str}[{vout}];"
     if layout == "fit":
-        return f"[{vin}]fps={config.OUT_FPS},scale={W}:{fg_h},pad={W}:{H}:0:(oh-ih)/2:black,setsar=1[{vout}];"
+        return f"[{vin}]fps={config.OUT_FPS},scale={W}:{fg_h}:flags=lanczos,pad={W}:{H}:0:(oh-ih)/2:black,setsar=1{clarity}[{vout}];"
     if layout == "split":
-        half = f"scale={W}:{H // 2}:force_original_aspect_ratio=increase,crop={W}:{H // 2}"
+        half = f"scale={W}:{H // 2}:{scale_hd},crop={W}:{H // 2}{clarity}"
         return (f"[{vin}]fps={config.OUT_FPS},split=2[{pfx}_l][{pfx}_r];[{pfx}_l]crop=iw/2:ih:0:0,{half}[{pfx}_t];"
                 f"[{pfx}_r]crop=iw/2:ih:iw/2:0,{half}[{pfx}_u];[{pfx}_t][{pfx}_u]vstack,setsar=1[{vout}];")
     fg_zoom = f"{zoom_crop}{W}:{fg_h}" if punch_zoom else ""
     return (f"[{vin}]fps={config.OUT_FPS},split=2[{pfx}_a][{pfx}_b];"
             f"[{pfx}_a]scale=270:480:force_original_aspect_ratio=increase,crop=270:480,boxblur=6:2,"
             f"scale={W}:{H},eq=brightness=-0.14:saturation=1.15[{pfx}_bg];"
-            f"[{pfx}_b]scale={W}:{fg_h}:force_original_aspect_ratio=increase,crop={W}:{fg_h}{fg_zoom}[{pfx}_fg];"
+            f"[{pfx}_b]scale={W}:{fg_h}:{scale_hd},crop={W}:{fg_h}{clarity}{fg_zoom}[{pfx}_fg];"
             f"[{pfx}_bg][{pfx}_fg]overlay=0:(H-h)/2,setsar=1[{vout}];")
 
 
 def _hook_y(layout, hook_y, facecam=None):
     """Where the heading goes. In the gameplay layout the webcam sits in the top corner, so a heading
     across the top would run under it: it goes just below the picture instead."""
+    if layout == "stacked":
+        return 220
     if layout == "gameplay" and facecam and len(facecam) == 4 and facecam[2] > 8:
         return PIP_MARGIN + int(round(PIP_W * facecam[3] / facecam[2])) + 32
     return hook_y
@@ -394,18 +422,78 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
     start, end = clip["start"], clip["end"]
     layout, fg_h, hook_y, cap_y = geometry(src_w, src_h, clip.get("layout", "blur"))
     face = clip.get("facecam")
-    if layout == "gameplay" and not (face and len(face) == 4):
-        layout = "crop"     # no webcam found: the game fills the screen, which is still the right shape
+    if not face and src and Path(src).is_file():
+        # Auto-detect streamer facecam on the source video piece
+        try:
+            from . import facecam
+            c_name = clip.get("target_creator") or clip.get("creator") or clip.get("title") or ""
+            detected = facecam.detect(src, creator=c_name)
+            if detected:
+                face = [detected["x"], detected["y"], detected["w"], detected["h"]]
+                clip["facecam"] = face
+                if layout in ("auto", "crop", "stacked", "streamer", "blur"):
+                    layout = "stacked"
+                    clip["layout"] = "stacked"
+        except Exception:
+            pass
+
+    if layout in ("gameplay", "stacked", "streamer"):
+        if not (face and len(face) == 4):
+            layout = "crop"     # no webcam found: the game fills the screen, which is still the right shape
+            face = None
+            clip["facecam"] = None
+            clip["layout"] = "crop"
+        else:
+            # Mandatory Human Face Verification & Reaction Quality Gate:
+            # 1. Never place an empty box or game HUD at the top: must have a verified human face!
+            # 2. Dynamic Reaction Check: If reaction is energetic/expressive, use stacked facecam;
+            #    if streamer is deadpan, motionless, or silent, use full-screen 9:16 gameplay!
+            try:
+                from . import facecam
+                if not facecam.verify_face_in_region(src, face, min_hits=2):
+                    layout = "crop"
+                    face = None
+                    clip["facecam"] = None
+                    clip["layout"] = "crop"
+                else:
+                    is_good_reaction, r_score, r_details = facecam.evaluate_reaction_quality(
+                        src, face, clip_meta=clip, words=words
+                    )
+                    if not is_good_reaction:
+                        layout = "crop"
+                        face = None
+                        clip["facecam"] = None
+                        clip["layout"] = "crop"
+                        clip["reaction_quality"] = r_details
+                    else:
+                        clip["reaction_quality"] = r_details
+            except Exception:
+                pass
+    if layout == "stacked":
+        cap_y = 860        # Subtitles sit in the neutral divider gap between facecam (0-820) and gameplay (820-1920)
+    else:
+        cap_y = 1540       # Full-screen crop/blur: lower-third safe zone, completely clear of central character/action
     hook_y = _hook_y(layout, hook_y, face)
     corner_tag = clip.get("corner_tag", "")
     prog_bar = clip.get("progress_bar", True)
 
     teaser_hook = bool(clip.get("teaser_hook", False))
-    teaser_dur = float(clip.get("teaser_dur", 2.2)) if teaser_hook else 0.0
+    teaser_dur = float(clip.get("teaser_dur", 1.4)) if teaser_hook else 0.0
     teaser_text = str(clip.get("teaser_text", "WAIT FOR IT... 👀"))
     teaser_start = clip.get("teaser_start")
     if teaser_start is None:
-        climax_suggest = start + max(1.0, (end - start) * 0.70)
+        # Smart climax finder: scan words in second half (60-90%) for highest-energy shock words
+        climax_suggest = None
+        if words:
+            mid_pt = start + (end - start) * 0.45
+            late_words = [w for w in words if w.get("s", 0) >= mid_pt and w.get("e", 0) <= end]
+            for w in late_words:
+                text_u = str(w.get("w", "")).upper()
+                if any(k in text_u for k in ("!", "?", "WHAT", "NO", "BRO", "OMG", "DEAD", "WTF", "CRAZY", "WAIT", "LOOK", "RUN", "LAUGH")):
+                    climax_suggest = float(w.get("s", start + (end - start) * 0.70))
+                    break
+        if climax_suggest is None:
+            climax_suggest = start + max(1.0, (end - start) * 0.70)
         teaser_start = min(climax_suggest, max(start, end - teaser_dur))
     else:
         teaser_start = float(teaser_start)
@@ -426,6 +514,12 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
     punch_zoom = bool(clip.get("punch_zoom", True))
     hook_video = clip.get("hook_video")
 
+    # Auditory pattern interrupt: Hook whoosh SFX
+    hook_sfx = clip.get("hook_sfx", True)
+    whoosh_path = config.DATA_DIR / "assets" / "hook_whoosh.m4a"
+    if not (hook_sfx and whoosh_path.exists()):
+        whoosh_path = None
+
     work = Path(tempfile.mkdtemp(prefix="pk"))
     try:
         # The title and description are also written into the file itself, for any place that reads them from it.
@@ -433,7 +527,7 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
         return _render_in(work, src, out_dir, name, start, end, layout, fg_h, ass, face=face,
                           music_path=music_path, music_volume=music_vol, punch_zoom=punch_zoom,
                           teaser_hook=teaser_hook, teaser_dur=teaser_dur, teaser_start=teaser_start,
-                          hook_video=hook_video, meta=meta)
+                          hook_video=hook_video, whoosh_path=whoosh_path, meta=meta)
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -441,7 +535,7 @@ def render_clip(src: Path, out_dir: Path, name: str, clip: dict, words: list, sr
 def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layout, fg_h, ass: str, face=None,
                music_path: Path = None, music_volume: float = 0.18, punch_zoom: bool = True,
                teaser_hook: bool = False, teaser_dur: float = 0.0, teaser_start: float = 0.0,
-               hook_video: str = None, meta: dict = None) -> dict:
+               hook_video: str = None, whoosh_path: Path = None, meta: dict = None) -> dict:
     global _qsv_ok
     (work / f"{name}.ass").write_text(ass, encoding="utf-8")
     (work / "f").mkdir()
@@ -458,21 +552,31 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
             inputs += ["-ss", f"{teaser_start:.2f}", "-t", f"{teaser_dur:.2f}", "-i", str(src)]
         inputs += ["-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src)]
 
-        # Video filters
+        # Video filters: High-energy teaser -> crisp white flash bloom -> main story
         f_teaser = _filter(layout, fg_h, face, punch_zoom=False, vin="0:v", vout="vt_raw")
-        fade_st = max(0.0, teaser_dur - 0.25)
-        f_teaser_fade = f"[vt_raw]fade=t=out:st={fade_st:.2f}:d=0.25:color=white[vt];"
+        fade_dur = 0.18
+        fade_st = max(0.0, teaser_dur - fade_dur)
+        f_teaser_fade = f"[vt_raw]fade=t=out:st={fade_st:.2f}:d={fade_dur:.2f}:color=white[vt];"
 
         f_main = _filter(layout, fg_h, face, punch_zoom=punch_zoom, vin="1:v", vout="vm_raw")
-        f_main_fade = f"[vm_raw]fade=t=in:st=0:d=0.25:color=white[vm];"
+        f_main_fade = f"[vm_raw]fade=t=in:st=0:d={fade_dur:.2f}:color=white[vm];"
 
         f_concat = f"[vt][vm]concat=n=2:v=1:a=0[v_cat];[v_cat]ass={name}.ass:fontsdir=f[v]"
         fc = f_teaser + f_teaser_fade + f_main + f_main_fade + f_concat
 
-        # Audio concat
-        f_audio = (f"[0:a]afade=t=out:st={fade_st:.2f}:d=0.25[a0_f];"
-                   f"[1:a]afade=t=in:st=0:d=0.25[a1_f];"
+        # Audio concat: seamless crossfade
+        f_audio = (f"[0:a]afade=t=out:st={fade_st:.2f}:d={fade_dur:.2f}[a0_f];"
+                   f"[1:a]afade=t=in:st=0:d={fade_dur:.2f}[a1_f];"
                    f"[a0_f][a1_f]concat=n=2:v=0:a=1[speech_all]")
+
+        # Hook whoosh SFX interrupt synced right at the flash transition point
+        if whoosh_path and whoosh_path.exists():
+            w_idx = inputs.count("-i")
+            inputs += ["-i", str(whoosh_path)]
+            whoosh_delay_ms = max(20, int(fade_st * 1000))
+            f_whoosh = f";[{w_idx}:a]adelay={whoosh_delay_ms}|{whoosh_delay_ms},volume=0.65[wfx];[speech_all][wfx]amix=inputs=2:duration=first:dropout_transition=2[speech_base]"
+        else:
+            f_whoosh = ";[speech_all]anull[speech_base]"
 
         if music_path and music_path.exists():
             bgm_work = work / "bgm.mp3"
@@ -480,39 +584,53 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
                 shutil.copyfile(music_path, bgm_work)
             except Exception:
                 bgm_work = music_path
+            bgm_idx = inputs.count("-i")
             inputs += ["-i", str(bgm_work)]
-            bgm_idx = 2
             audio_filter = (
-                f"[speech_all]asplit=2[sp1][sp2];"
+                f";[speech_base]asplit=2[sp1][sp2];"
                 f"[{bgm_idx}:a]aloop=loop=-1:size=2e+09,volume={max(0.02, min(0.60, music_volume)):.2f}[bgm_loop];"
                 f"[bgm_loop][sp1]sidechaincompress=threshold=0.08:ratio=5:attack=30:release=350[bgm_ducked];"
                 f"[sp2][bgm_ducked]amix=inputs=2:duration=first:dropout_transition=2,loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
             )
-            fc = fc + ";" + f_audio + ";" + audio_filter
+            fc = fc + ";" + f_audio + f_whoosh + audio_filter
             maps += ["-map", "[aout]"]
         else:
-            fc = fc + ";" + f_audio + ";[speech_all]loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
+            fc = fc + ";" + f_audio + f_whoosh + ";[speech_base]loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
             maps += ["-map", "[aout]"]
     else:
         fc = _filter(layout, fg_h, face, punch_zoom, vin="0:v", vout="v0") + f"[v0]ass={name}.ass:fontsdir=f[v]"
         inputs = ["-ss", f"{start:.2f}", "-t", f"{end - start:.2f}", "-i", str(src)]
 
+        if whoosh_path and whoosh_path.exists():
+            w_idx = inputs.count("-i")
+            inputs += ["-i", str(whoosh_path)]
+            f_whoosh = f";[{w_idx}:a]adelay=50|50,volume=0.55[wfx];[0:a][wfx]amix=inputs=2:duration=first:dropout_transition=2[speech_base]"
+        else:
+            f_whoosh = ""
+
         if music_path and music_path.exists():
             bgm_work = work / "bgm.mp3"
             try:
                 shutil.copyfile(music_path, bgm_work)
             except Exception:
                 bgm_work = music_path
+            bgm_idx = inputs.count("-i")
             inputs += ["-i", str(bgm_work)]
+            sp_in = "[speech_base]" if whoosh_path else "[0:a]"
             audio_filter = (
-                f"[1:a]aloop=loop=-1:size=2e+09,volume={max(0.02, min(0.60, music_volume)):.2f}[bgm_loop];"
-                f"[bgm_loop][0:a]sidechaincompress=threshold=0.08:ratio=5:attack=30:release=350[bgm_ducked];"
-                f"[0:a][bgm_ducked]amix=inputs=2:duration=first:dropout_transition=2,loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
+                f";{sp_in}asplit=2[sp1][sp2];"
+                f"[{bgm_idx}:a]aloop=loop=-1:size=2e+09,volume={max(0.02, min(0.60, music_volume)):.2f}[bgm_loop];"
+                f"[bgm_loop][sp1]sidechaincompress=threshold=0.08:ratio=5:attack=30:release=350[bgm_ducked];"
+                f"[sp2][bgm_ducked]amix=inputs=2:duration=first:dropout_transition=2,loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
             )
-            fc = fc + ";" + audio_filter
+            fc = fc + f_whoosh + audio_filter
             maps += ["-map", "[aout]"]
         else:
-            maps += ["-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11"]
+            if whoosh_path and whoosh_path.exists():
+                fc = fc + f_whoosh + ";[speech_base]loudnorm=I=-14:TP=-1.5:LRA=11[aout]"
+                maps += ["-map", "[aout]"]
+            else:
+                maps += ["-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11"]
 
     base = ["ffmpeg", "-y", "-v", "error"] + inputs + [
         "-filter_complex", fc] + maps + [
@@ -522,10 +640,12 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
         if v:
             base += ["-metadata", f"{k}={v}"]
     base += ["-movflags", "+faststart", "-pix_fmt"]
-    encoders = []
+    encoders = [
+        ("nvenc", ["yuv420p", "-c:v", "h264_nvenc", "-preset", "p6", "-cq", "16", "-b:v", "18M", "-maxrate", "24M", "-bufsize", "36M"]),
+        ("x264", ["yuv420p", "-c:v", "libx264", "-crf", "16", "-preset", "medium"]),
+    ]
     if _qsv_ok is not False:
-        encoders.append(("qsv", ["nv12", "-c:v", "h264_qsv", "-global_quality", "23", "-preset", "fast"]))
-    encoders.append(("x264", ["yuv420p", "-c:v", "libx264", "-crf", "21", "-preset", "veryfast"]))
+        encoders.append(("qsv", ["nv12", "-c:v", "h264_qsv", "-global_quality", "18", "-preset", "medium"]))
     err = None
     for label, enc in encoders:
         p = subprocess.run(base + enc + [f"{name}.mp4"], cwd=work, capture_output=True, text=True,
@@ -542,7 +662,7 @@ def _render_in(work: Path, src: Path, out_dir: Path, name: str, start, end, layo
 
     cover_t = (teaser_dur if teaser_hook else 0.0) + min(1.2, (end - start) / 2)
     run(["ffmpeg", "-y", "-v", "error", "-ss", f"{cover_t:.2f}", "-i", f"{name}.mp4", "-frames:v", "1",
-         "-q:v", "3", f"{name}.jpg"], cwd=work)
+         "-q:v", "1", f"{name}.jpg"], cwd=work)
     for ext in ("mp4", "jpg", "ass"):
         shutil.move(str(work / f"{name}.{ext}"), str(out_dir / f"{name}.{ext}"))
     return {"file": f"{name}.mp4", "cover": f"{name}.jpg", "layout": layout}

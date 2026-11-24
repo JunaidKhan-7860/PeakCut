@@ -326,16 +326,318 @@ def _seen(path: str | Path, box, w: int, h: int, still: np.ndarray, light: np.nd
     return _finish(path, found, w, h, still)
 
 
-def detect(path: str | Path, ask=None) -> dict | None:
+CREATOR_FACECAM_PRESETS = {
+    "carry": {"corner": "bottom-right", "rel": (0.72, 0.58, 0.27, 0.40)},
+    "carryislive": {"corner": "bottom-right", "rel": (0.72, 0.58, 0.27, 0.40)},
+    "carryminati": {"corner": "bottom-right", "rel": (0.72, 0.58, 0.27, 0.40)},
+    "techno": {"corner": "top-left", "rel": (0.01, 0.02, 0.28, 0.38)},
+    "technogamerz": {"corner": "top-left", "rel": (0.01, 0.02, 0.28, 0.38)},
+    "techno-gamerz": {"corner": "top-left", "rel": (0.01, 0.02, 0.28, 0.38)},
+    "mythpat": {"corner": "top-left", "rel": (0.01, 0.02, 0.28, 0.38)},
+    "asianjeff": {"corner": "bottom-right", "rel": (0.72, 0.60, 0.27, 0.38)},
+    "speed": {"corner": "top-right", "rel": (0.70, 0.02, 0.29, 0.40)},
+    "ishowspeed": {"corner": "top-right", "rel": (0.70, 0.02, 0.29, 0.40)},
+    "kai": {"corner": "top-right", "rel": (0.68, 0.02, 0.30, 0.42)},
+    "kaicenat": {"corner": "top-right", "rel": (0.68, 0.02, 0.30, 0.42)},
+    "kai-cenat": {"corner": "top-right", "rel": (0.68, 0.02, 0.30, 0.42)},
+    "casetoo": {"corner": "top-left", "rel": (0.01, 0.02, 0.28, 0.38)},
+    "totalgaming": {"corner": "bottom-right", "rel": (0.70, 0.58, 0.28, 0.40)},
+    "total-gaming": {"corner": "bottom-right", "rel": (0.70, 0.58, 0.28, 0.40)},
+    "dom": {"corner": "bottom-right", "rel": (0.72, 0.58, 0.27, 0.40)},
+    "dasgasdom3": {"corner": "bottom-right", "rel": (0.72, 0.58, 0.27, 0.40)}
+}
+
+
+YUNET_MODEL_PATH = Path("C:/peakcut/data/models/face_detection_yunet_2023mar.onnx")
+
+
+def _get_yunet_detector(w: int, h: int, score_thresh: float = 0.60):
+    if not YUNET_MODEL_PATH.is_file():
+        return None
+    try:
+        import cv2
+        if hasattr(cv2, "FaceDetectorYN_create"):
+            return cv2.FaceDetectorYN_create(str(YUNET_MODEL_PATH), "", (w, h), score_threshold=score_thresh, nms_threshold=0.3)
+    except Exception:
+        pass
+    return None
+
+
+def verify_face_in_region(path: str | Path, box: list | tuple, min_hits: int = 2) -> bool:
+    """Verifies with YuNet face detection that a human face actually exists in the specified box.
+    Samples up to 8 frames across the video and checks if at least min_hits frames contain a human face.
+    Prevents false facecam cropping on videos where the streamer is absent or not using a webcam."""
+    if not path or not Path(path).is_file() or not box or len(box) != 4:
+        return False
+    bx, by, bw, bh = box
+    if bw <= 15 or bh <= 15:
+        return False
+    try:
+        import cv2
+        cap = cv2.VideoCapture(str(path))
+        if not cap.isOpened():
+            return False
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        dur = total / fps if fps > 0 else 0
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if dur < 0.5 or w == 0 or h == 0:
+            cap.release()
+            return False
+
+        # Clamp box to video frame
+        bx = max(0, min(w - 15, int(bx)))
+        by = max(0, min(h - 15, int(by)))
+        bw = max(15, min(w - bx, int(bw)))
+        bh = max(15, min(h - by, int(bh)))
+
+        detector = _get_yunet_detector(bw, bh, score_thresh=0.60)
+        if detector is None:
+            cap.release()
+            return False
+
+        samples = np.linspace(0.2, max(0.2, dur - 0.2), num=min(8, max(4, int(dur // 2))))
+        hits = 0
+        for t in samples:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                continue
+            crop = frame[by:by+bh, bx:bx+bw]
+            if crop.size == 0:
+                continue
+            detector.setInputSize((crop.shape[1], crop.shape[0]))
+            retval, faces = detector.detect(crop)
+            if faces is not None and len(faces) > 0:
+                for face in faces:
+                    if float(face[-1]) >= 0.60:
+                        hits += 1
+                        break
+        cap.release()
+        return hits >= min_hits
+    except Exception:
+        return False
+
+
+def evaluate_reaction_quality(video_path: str | Path, face_box: list | tuple,
+                              clip_meta: dict = None, words: list = None) -> tuple[bool, float, dict]:
+    """Judges whether a streamer face reaction in this specific clip is high-value / expressive enough
+    to warrant splitting the screen into a 42% facecam + 58% gameplay layout, or if the streamer is
+    deadpan / motionless / unengaged, in which case full-screen 9:16 gameplay is superior.
+
+    Returns (is_good_reaction, score, details_dict)."""
+    if not video_path or not Path(video_path).is_file() or not face_box or len(face_box) != 4:
+        return False, 0.0, {"verdict": "no_face_box"}
+
+    try:
+        import cv2
+        cap = cv2.VideoCapture(str(video_path))
+        if not cap.isOpened():
+            return False, 0.0, {"verdict": "cannot_open_video"}
+
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        dur = total / fps if fps > 0 else 0
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if dur < 0.5 or w == 0 or h == 0:
+            cap.release()
+            return False, 0.0, {"verdict": "invalid_duration_or_dims"}
+
+        bx, by, bw, bh = face_box
+        bx = max(0, min(w - 15, int(bx)))
+        by = max(0, min(h - 15, int(by)))
+        bw = max(15, min(w - bx, int(bw)))
+        bh = max(15, min(h - by, int(bh)))
+
+        # Sample 12-16 frames evenly across the clip
+        samples = np.linspace(0.3, max(0.3, dur - 0.3), num=min(16, max(6, int(dur * 1.2))))
+        crops = []
+        for t in samples:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                continue
+            crop = frame[by:by+bh, bx:bx+bw]
+            if crop.size > 0:
+                small = cv2.resize(crop, (128, 128))
+                gray = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+                crops.append(gray)
+        cap.release()
+
+        if len(crops) < 4:
+            return False, 0.0, {"verdict": "insufficient_frames"}
+
+        # 1. Physical motion inside facecam box (expressions, head shaking, laughing, body shifts)
+        diffs = [float(np.mean(cv2.absdiff(crops[i], crops[i-1]))) for i in range(1, len(crops))]
+        mean_motion = float(np.mean(diffs))
+        max_motion = float(np.max(diffs))
+
+        stack = np.stack(crops, axis=0).astype(np.float32)
+        overall_variance = float(np.mean(np.std(stack, axis=0)))
+        motion_score = round(mean_motion * 0.45 + max_motion * 0.25 + overall_variance * 0.30, 2)
+
+        # 2. Vocal / Semantic excitement in clip transcript and titles
+        vocal_bonus = 0.0
+        text_content = ""
+        if words:
+            text_content = " ".join(str(w.get("w", "")) for w in words).upper()
+        if clip_meta:
+            text_content += " " + str(clip_meta.get("title", "")).upper() + " " + str(clip_meta.get("hook", "")).upper()
+
+        reaction_triggers = (
+            "!", "?", "BRO", "NO", "WTF", "OMG", "DEAD", "WHAT", "CRAZY", "WAIT",
+            "LOOK", "RUN", "LAUGH", "HAHA", "LMAO", "OH", "DAMN", "SHIT", "HOLY", "WOW",
+            "BHAI", "MAR", "PAGAL"
+        )
+        hits = sum(1 for trigger in reaction_triggers if trigger in text_content)
+        if hits > 0:
+            vocal_bonus = min(15.0, hits * 3.0)
+
+        # Category cues
+        cat = str(clip_meta.get("category", "")).lower() if clip_meta else ""
+        if cat in ("funny", "rage", "shock", "reaction"):
+            vocal_bonus += 5.0
+        elif cat in ("cinematic", "scenic", "driving", "trailer"):
+            vocal_bonus -= 6.0
+
+        total_score = round(motion_score + vocal_bonus, 2)
+
+        # Threshold:
+        # An active, valuable streamer reaction has motion_score >= 12.0 OR (motion_score >= 8.0 with vocal excitement >= 6.0)
+        # A deadpan, motionless streamer has motion_score < 8.0 and minimal vocal excitement.
+        is_good_reaction = bool(motion_score >= 12.0 or (motion_score >= 8.0 and vocal_bonus >= 6.0))
+
+        details = {
+            "is_good_reaction": is_good_reaction,
+            "total_score": total_score,
+            "motion_score": motion_score,
+            "mean_motion": round(mean_motion, 2),
+            "max_motion": round(max_motion, 2),
+            "variance": round(overall_variance, 2),
+            "vocal_bonus": vocal_bonus,
+            "verdict": "active_reaction_use_facecam" if is_good_reaction else "passive_face_prefer_full_gameplay"
+        }
+        return is_good_reaction, total_score, details
+    except Exception:
+        return False, 0.0, {"verdict": "evaluation_error"}
+
+
+def _detect_faces_cv(path: str | Path) -> dict | None:
+    """Uses YuNet deep neural network face detector to locate the persistent streamer facecam box."""
+    try:
+        import cv2
+        cap = cv2.VideoCapture(str(path))
+        if not cap.isOpened():
+            return None
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        dur = total / fps if fps > 0 else 0
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if dur < 1.0 or w == 0 or h == 0:
+            cap.release()
+            return None
+
+        detector = _get_yunet_detector(w, h, score_thresh=0.65)
+        if detector is None:
+            cap.release()
+            return None
+
+        samples = np.linspace(0.5, max(0.5, dur - 0.5), num=min(14, max(6, int(dur // 2))))
+        detections = []
+        for t in samples:
+            cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
+            ret, frame = cap.read()
+            if not ret or frame is None:
+                continue
+            detector.setInputSize((w, h))
+            retval, faces = detector.detect(frame)
+            if faces is not None:
+                for face in faces:
+                    fx, fy, fw, fh = int(face[0]), int(face[1]), int(face[2]), int(face[3])
+                    score = float(face[-1])
+                    # Streamer face must be at least 4% of dimension to avoid tiny game pedestrians
+                    if score >= 0.65 and fw >= min(w, h) * 0.04 and fh >= min(w, h) * 0.04:
+                        detections.append((fx, fy, fw, fh, score))
+        cap.release()
+
+        if not detections:
+            return None
+
+        # Cluster detections that appear near the same location across frames
+        clusters = []
+        for d in detections:
+            matched = False
+            for c in clusters:
+                cx, cy = d[0] + d[2] / 2, d[1] + d[3] / 2
+                if abs(cx - c['cx']) < w * 0.12 and abs(cy - c['cy']) < h * 0.12:
+                    c['count'] += 1
+                    c['boxes'].append(d)
+                    c['cx'] = float(np.mean([b[0] + b[2] / 2 for b in c['boxes']]))
+                    c['cy'] = float(np.mean([b[1] + b[3] / 2 for b in c['boxes']]))
+                    matched = True
+                    break
+            if not matched:
+                clusters.append({'count': 1, 'cx': float(d[0] + d[2] / 2), 'cy': float(d[1] + d[3] / 2), 'boxes': [d]})
+
+        if not clusters:
+            return None
+
+        best = max(clusters, key=lambda x: x['count'])
+        if best['count'] < 3:
+            return None
+
+        med_fx = int(np.median([b[0] for b in best['boxes']]))
+        med_fy = int(np.median([b[1] for b in best['boxes']]))
+        med_fw = int(np.median([b[2] for b in best['boxes']]))
+        med_fh = int(np.median([b[3] for b in best['boxes']]))
+
+        # Expand comfortably around face to encompass facecam frame (face + torso + margins)
+        cam_w = int(med_fw * 2.5)
+        cam_h = int(med_fh * 2.8)
+        cam_x = max(0, min(w - cam_w, med_fx - int(med_fw * 0.75)))
+        cam_y = max(0, min(h - cam_h, med_fy - int(med_fh * 0.6)))
+
+        corner = _corner(cam_x, cam_y, cam_x + cam_w, cam_y + cam_h, w, h)
+        return {"x": cam_x, "y": cam_y, "w": cam_w, "h": cam_h,
+                "corner": corner, "score": 98.0, "conf": "high"}
+    except Exception:
+        return None
+
+
+def detect(path: str | Path, ask=None, creator: str = None) -> dict | None:
     """The facecam's box in the source, in source pixels, or None.
 
     The box is given as x, y, width, height, with the confidence in "score" and
-    how sure we are that it is a camera in "conf".
+    how sure we are that it is a camera in "conf"."""
+    # 1. Fast reliable YuNet neural face detection first
+    cv_box = _detect_faces_cv(path)
+    if cv_box:
+        return cv_box
 
-    `ask` is shown one frame of the stream and says where the webcam is (brain.look_for_facecam). Its
-    answer is measured again on the picture before it is believed, so a model that is wrong costs the
-    search an idea, not a broken clip. Without `ask` nothing outside the file is looked at, which is how
-    the tests run and how a job with no AI set still works."""
+    # 2. Known creator facecam profile preset - ONLY accepted if verified to contain a real human face!
+    if creator:
+        c_clean = "".join(c for c in str(creator).lower() if c.isalnum())
+        # Check against pure gameplay / review channels (no facecam!)
+        if not any(rev in c_clean for rev in ("review", "ign", "gameranx", "breakdown", "trailer", "cinematic")):
+            for key, preset in CREATOR_FACECAM_PRESETS.items():
+                k_clean = "".join(c for c in key.lower() if c.isalnum())
+                if k_clean in c_clean or c_clean in k_clean:
+                    w, h = _size(path)
+                    if w > 0 and h > 0:
+                        rx, ry, rw, rh = preset["rel"]
+                        candidate = [int(w * rx), int(h * ry), int(w * rw), int(h * rh)]
+                        # CRITICAL QUALITY GATE: Verify that the preset box actually contains a real human face!
+                        if verify_face_in_region(path, candidate, min_hits=2):
+                            return {
+                                "x": candidate[0], "y": candidate[1],
+                                "w": candidate[2], "h": candidate[3],
+                                "corner": preset["corner"], "score": 95.0, "conf": "high"
+                            }
+
+    # 3. Fallback edge and stillness analysis
     frames = _frames(path)
     if len(frames) < 4:
         return None
@@ -353,9 +655,6 @@ def detect(path: str | Path, ask=None) -> dict | None:
     vpeaks, hpeaks = _peaks(vx, 40), _peaks(hy, 40)
     found = _local(vpeaks, hpeaks, still, light) if (vpeaks and hpeaks) else []
     if looked and hinted:
-        # The model is better than any measurement at saying "that is a person", and worse at saying
-        # exactly where the lines are. So it picks which of the measured boxes it is, and only if it
-        # matches none of them is its own box measured and used.
         match = max(found, key=lambda c: _overlap(c, hinted)) if found else None
         if match and _overlap(match, hinted) >= MATCH:
             return _finish(path, match, w, h, still)
