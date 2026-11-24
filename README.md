@@ -94,7 +94,7 @@ PeakCut features native **Google Antigravity Agent** integration (`.agents/skill
 ### How to use it in Google Antigravity:
 1. **Open Google Antigravity** and clone/open this repository:
    ```bash
-   git clone https://github.com/Junaidkhan7230/PeakCut.git
+   git clone https://github.com/JunaidKhan-7860/PeakCut.git
    ```
 2. **Open the `PeakCut` folder** as your workspace in Antigravity.
    * Antigravity automatically discovers the built-in skill (`.agents/skills/peakcut/SKILL.md`) and project guidelines (`GEMINI.md`).
@@ -113,7 +113,7 @@ Antigravity executes the setup and launch scripts automatically, detects your ha
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Junaidkhan7230/PeakCut.git
+   git clone https://github.com/JunaidKhan-7860/PeakCut.git
    cd PeakCut
    ```
 
