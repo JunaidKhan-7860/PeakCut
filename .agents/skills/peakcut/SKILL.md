@@ -70,5 +70,6 @@ powershell -ExecutionPolicy Bypass -File .\stop.ps1
 ---
 
 ## 🛡️ Operating Rules
+* **Mandatory User Approval Before Submission**: NEVER submit, publish, or upload any clip to YouTube, Instagram, or TikTok without presenting the clip to the user and asking for their explicit approval first.
 * **Safe Clipping Guard**: Posting is frozen by default (`POSTING_ENABLED = False`). Clips are staged for review without auto-publishing to YouTube or Instagram.
 * **Storage Protection**: PeakCut automatically offloads large video files to Cloud CDN to preserve PC hard drive space.

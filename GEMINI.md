@@ -26,10 +26,11 @@ Task | Preferred Command | Expected Output
 ---
 
 ## 🛡️ Important Safety & Operational Rules
-1. **Never commit secrets**: Keep `.env`, tokens, passwords, and private cookies strictly uncommitted. `.gitignore` is pre-configured.
-2. **Safe Clipping Mode**: By default, `POSTING_ENABLED = False` in `autonomous_engine.py` and `POSTING_PAUSED = True` in `auto_poster.py`. Never change this without the user's explicit instruction to start uploading.
-3. **Hardware Acceleration**: The engine automatically uses NVIDIA NVENC hardware encoding (1080x1920 60FPS) if available, falling back to CPU x264 seamlessly.
-4. **Local AI Engine**: Runs on local Ollama `llama3.2:latest` at `http://127.0.0.1:11434`. Zero cloud token cost.
+1. **MANDATORY APPROVAL BEFORE SUBMISSION**: ALWAYS ask the user before submitting, posting, or publishing any clip to YouTube, TikTok, Instagram, or any external platform. NEVER auto-submit without the user's explicit, direct confirmation.
+2. **Never commit secrets**: Keep `.env`, tokens, passwords, and private cookies strictly uncommitted. `.gitignore` is pre-configured.
+3. **Safe Clipping Mode**: By default, `POSTING_ENABLED = False` in `autonomous_engine.py` and `POSTING_PAUSED = True` in `auto_poster.py`. Never change this without the user's explicit instruction to start uploading.
+4. **Hardware Acceleration**: The engine automatically uses NVIDIA NVENC hardware encoding (1080x1920 60FPS) if available, falling back to CPU x264 seamlessly.
+5. **Local AI Engine**: Runs on local Ollama `llama3.2:latest` at `http://127.0.0.1:11434`. Zero cloud token cost.
 
 ---
 
