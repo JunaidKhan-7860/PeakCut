@@ -1,0 +1,28 @@
+# Khan Clipping — Beginner AI Agent Setup Prompt (Hinglish + English)
+# Paste this prompt into Google Antigravity, Cursor, Claude Code, or Codex CLI.
+
+You are my setup assistant. Talk to me in simple Hinglish/English with short friendly sentences.
+
+GOAL: Do EVERYTHING yourself from start to finish until Khan Clipping is running and open in my browser at http://127.0.0.1:8765/dashboard and http://127.0.0.1:8765/app.
+
+WHAT IT IS
+Khan Clipping combines the best of PeakCut's 24/7 autonomous clipping studio & 12-director agency with NeonClipping's Vice-City Neon UI, Hinglish loanword engine, Always-Fix dictionary, 13 caption styles, 5-star preference ranker, and Watch Folder automation. Safe Staging Mode is ON by default so nothing is ever posted publicly without my explicit approval.
+
+STEP 1. CHECK TOOLS
+- Verify Python 3.10+, FFmpeg (`winget install Gyan.FFmpeg`), and Git (`winget install Git.Git`).
+- Optional recommended AI: Ollama + `ollama pull llama3.2:latest` (or use free Groq/Gemini key inside Settings -> AI).
+
+STEP 2. CLONE & INSTALL
+  git clone https://github.com/JunaidKhan-7860/PeakCut.git khan-clipping
+  cd khan-clipping
+  powershell -ExecutionPolicy Bypass -File .\install_antigravity.ps1
+
+STEP 3. LAUNCH
+  .\start.bat   (or powershell -ExecutionPolicy Bypass -File .\launch.ps1)
+Wait until http://127.0.0.1:8765/healthz returns {"ok": true}, then verify http://127.0.0.1:8765/api/readiness.
+
+STEP 4. EXPLAIN IN SIMPLE BULLETS
+1. Live Dashboard: http://127.0.0.1:8765/dashboard
+2. Neon Studio Editor: http://127.0.0.1:8765/app
+3. Safe Staging Guard: Nothing posts automatically until I review and say yes.
+4. "Always Fix" words & 5-star ratings live inside Settings -> Automation & Words and the clip editor.

@@ -1,4 +1,4 @@
-# PeakCut AI — Autonomous Viral Video Studio
+# Khan Clipping — Autonomous Neon AI Video Studio
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Modern%20Web-009688.svg)](https://fastapi.tiangolo.com/)
@@ -7,15 +7,13 @@
 [![NVIDIA NVENC](https://img.shields.io/badge/Hardware%20Accel-1080x1920%2060FPS-76B900.svg)](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-> **Turn uncut live streams and long videos into captioned, viral vertical clips (1080x1920 60FPS) ready for YouTube Shorts, TikTok, and Instagram Reels — powered by local offline AI.**
+> **The Ultimate Combined AI Clipper**: Merges **PeakCut's 24/7 Autonomous Agency Syndicate, Cloud CDN Offloading, & Pro 5-Tab Studio** with **NeonClipping's Vice-City Synthwave Neon UI, Hinglish Loanwords, Always-Fix Dictionary, Excitement Lexicon, 13 Caption Styles, & 5-Star Preference Ranker.**
 
 ---
 
 ## 🌟 Overview
 
-**PeakCut AI** is a complete, self-hosted autonomous creative studio. It continuously discovers uncut live streams and long-form broadcasts, isolates viral retention peaks with local **Llama 3.2**, tracks streamer facecams with dynamic stacked framing, generates kinetic bouncing subtitles, and masters broadcast-standard audio.
-
-Run it 100% locally on your computer with **zero subscription costs and zero cloud token limits**.
+**Khan Clipping** turns uncut live streams and long YouTube/Twitch/Kick VODs into captioned, viral 9:16 vertical clips (1080x1920 60FPS) — 100% locally with **zero subscription fees** and **mandatory Safe Staging review** before anything ever posts.
 
 ---
 

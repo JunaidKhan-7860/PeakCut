@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from . import ai, config, games, usage, roman
+from . import ai, config, excite, games, glossary, learn, usage, roman
 
 WINDOW_SEC, OVERLAP_SEC = 15 * 60, 60
 
@@ -174,10 +174,12 @@ def _tidy(c, s, e, game=None):
         if t and t.lower() not in {x.lower() for x in tags}:
             tags.append(t)
     words = c.get("highlight_words") if isinstance(c.get("highlight_words"), list) else []
+    hook_txt = glossary.fix_text(roman.to_roman(_text(c.get("hook"), 60))).upper()
+    title_txt = glossary.fix_text(roman.to_roman(_text(c.get("title"), 100)))
     return {
         "start": s, "end": e, "score": max(0, min(100, int(_num(c.get("score"))))),
         "category": cat if cat in CATEGORIES else "other",
-        "hook": roman.to_roman(_text(c.get("hook"), 60)).upper(), "title": roman.to_roman(_text(c.get("title"), 100)),
+        "hook": hook_txt, "title": title_txt,
         "description": roman.to_roman(_text(c.get("description"), 300)),
         "hashtags": [t for t in tags if t][:8],
         "highlight_words": [roman.to_roman(_text(h, 30)) for h in words][:8],
@@ -312,16 +314,25 @@ def _snap(clip, lines, words, min_len, max_len, duration):
 
 
 def fallback_by_loudness(db, words, n, max_len, duration):
-    """No AI available: take the loudest stretches that contain speech."""
+    """No AI available: blend loudness jumps with spoken excitement / game event peaks."""
     z = loud_zscore(db)
-    picks, order = [], np.argsort(-z)
+    ex = excite.seconds_signal(words, duration)
+    combined = np.zeros(max(len(z), len(ex), 1))
+    if len(z):
+        combined[:len(z)] += 0.65 * np.clip(z / 3.0, 0, 1)
+    if len(ex):
+        combined[:len(ex)] += 0.35 * ex
+    picks, order = [], np.argsort(-combined)
     for sec in order:
         s = max(0.0, float(sec) - max_len * 0.6)
         e = min(duration, s + max_len)
         if any(not (e <= p["start"] or s >= p["end"]) for p in picks):
             continue
-        if not any(s <= w["s"] <= e for w in words):
+        clip_words = [w for w in words if s <= w["s"] <= e]
+        if not clip_words:
             continue
+        events = excite.game_events(clip_words)
+        ex_score = excite.window_score(clip_words, e - s)
         viral_loud_titles = [
             "Bro Lost His Entire Mind 😭",
             "Nobody Expected This Reaction 💀",
@@ -331,9 +342,12 @@ def fallback_by_loudness(db, words, n, max_len, duration):
             "His Entire Chat Went Crazy 😱"
         ]
         chosen_title = viral_loud_titles[len(picks) % len(viral_loud_titles)]
-        picks.append({"start": s, "end": e, "score": 75, "category": "shock", "hook": "WAIT FOR IT... 👀",
-                      "title": chosen_title, "description": "Streamer lost control during this crazy moment!", "hashtags": ["gaming", "viral", "fyp", "shorts"], "highlight_words": [],
-                      "reason": "Peak reaction loudness detected during speech."})
+        reason = ("Peak events: " + ", ".join(events[:3])) if events else "Peak reaction loudness & hype detected during speech."
+        picks.append({"start": s, "end": e, "score": max(72, min(96, int(72 + 24 * ex_score))), "category": "shock",
+                      "hook": (events[0].upper() + "?! 👀") if events else "WAIT FOR IT... 👀",
+                      "title": chosen_title, "description": "Streamer lost control during this crazy moment!",
+                      "hashtags": ["gaming", "viral", "fyp", "shorts"], "highlight_words": [],
+                      "reason": reason})
         if len(picks) >= n:
             break
     return picks
@@ -400,7 +414,23 @@ def find_clips(words, db, duration, title="", uploader="", max_clips=6, min_len=
             continue
         if _overlaps(s, e, clips):
             continue  # overlaps a better clip
-        clips.append(_tidy(c, s, e, game))
+        tidied = _tidy(c, s, e, game)
+        clip_words = [w for w in words if s <= w["s"] <= e]
+        ev = excite.game_events(clip_words)
+        w_ex = excite.window_score(clip_words, max(1.0, e - s))
+        s0, s1 = max(0, int(s)), min(len(z), max(int(s) + 1, int(e)))
+        l_sc = float(np.clip(z[s0:s1].mean() / 3.0, 0.0, 1.0)) if s1 > s0 and len(z) else 0.5
+        feat = {"loud": round(l_sc, 3), "words": round(w_ex, 3), "llm": round(tidied["score"] / 100.0, 3)}
+        weights = learn.load_weights()
+        # Blend AI score with adaptive 5-star preference ranker + excitement bonus
+        num = weights["loud"] * feat["loud"] + weights["words"] * feat["words"] + weights["llm"] * feat["llm"]
+        den = weights["loud"] + weights["words"] + weights["llm"]
+        adapted = int(round(max(0.0, min(100.0, (num / den if den else 0.75) * 100.0))))
+        tidied["score"] = max(tidied["score"], min(99, int(round(0.75 * tidied["score"] + 0.25 * adapted))))
+        tidied["features"] = feat
+        if ev:
+            tidied["game_events"] = ev
+        clips.append(tidied)
         if len(clips) >= max_clips:
             break
 

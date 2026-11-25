@@ -28,11 +28,23 @@ STYLES = {
               "strong": "2222FF", "outline": 5, "pop": 110, "upper": True, "per": 3},
     "clean": {"label": "Clean Minimal", "font": "Poppins ExtraBold", "size": 72, "base": "FFFFFF", "active": "6BD7FF",
                "strong": "FFFFFF", "outline": 3, "pop": 105, "upper": False, "per": 3},
+    "gta": {"label": "GTA Neon (Pink / Cyan / Lime)", "font": "Poppins ExtraBold", "size": 78, "base": "F7E858", "active": "A54BFF",
+            "strong": "58FBD4", "outline": 4, "pop": 110, "upper": True, "per": 3},
+    "pill": {"label": "Neon Pill (Electric Highlight)", "font": "Poppins ExtraBold", "size": 76, "base": "FFFFFF", "active": "58FBD4",
+             "strong": "A54BFF", "outline": 4, "pop": 108, "upper": False, "per": 3},
+    "oneword": {"label": "One Word Punch (Huge Impact)", "font": "Archivo Black", "size": 92, "base": "FFFFFF", "active": "A54BFF",
+                "strong": "58FBD4", "outline": 5, "pop": 114, "upper": True, "per": 1},
+    "cine": {"label": "Cinematic (Wide Minimal)", "font": "Poppins ExtraBold", "size": 66, "base": "EDEDED", "active": "F7E858",
+             "strong": "FFFFFF", "outline": 2, "pop": 103, "upper": False, "per": 4},
+    "boxed": {"label": "Boxed Highlight", "font": "Poppins ExtraBold", "size": 74, "base": "FFFFFF", "active": "58FBD4",
+              "strong": "A54BFF", "outline": 5, "pop": 106, "upper": False, "per": 3},
 }
 HOOK_THEMES = {
+    "vice": {"label": "Khan Vice Pink Pill", "ink": "FFFFFF", "box": "A54BFF"},
+    "cyan_neon": {"label": "Cyber Neon Cyan", "ink": "120918", "box": "F7E858"},
     "white": {"label": "Classic White Pill", "ink": "14100E", "box": "FFFFFF"},
     "yellow": {"label": "MrBeast Yellow Pill", "ink": "0D0A00", "box": "00E5FF"},
-    "cyber": {"label": "Cyber Cyan Pill", "ink": "000000", "box": "FFFF00"},
+    "cyber": {"label": "Cyber Gold Pill", "ink": "000000", "box": "FFFF00"},
     "dark": {"label": "Dark Mode Minimal", "ink": "FFFFFF", "box": "1C1917"},
     "fire": {"label": "Hot Crimson Pill", "ink": "FFFFFF", "box": "0033CC"},
 }
@@ -100,8 +112,9 @@ LAYOUTS = {"auto": "Smart layout (Reaction stacked if facecam present, else crop
            "left": "Fill the screen, keep the left side", "right": "Fill the screen, keep the right side",
            "fit": "Full frame on black", "split": "Split screen: left half on top, right half below (two people)",
            "gameplay": "Gameplay fills the screen, facecam in the corner",
+           "circle": "Gameplay fills the screen, circle facecam in the corner",
            "stacked": "Stacked reaction: Facecam on top, gameplay below"}
-_FILLS = ("crop", "left", "right", "gameplay", "stacked", "auto")      # layouts where the picture covers the whole frame
+_FILLS = ("crop", "left", "right", "gameplay", "circle", "stacked", "auto")      # layouts where the picture covers the whole frame
 
 
 def _ts(t):
@@ -371,6 +384,17 @@ def _filter(layout, fg_h, facecam=None, punch_zoom=True, vin="0:v", vout="v0"):
                 f"[{pfx}_b_src]scale={W}:{bot_h}:{scale_hd},crop={W}:{bot_h},setsar=1{clarity}[{pfx}_b];"
                 f"[{pfx}_t][{pfx}_b]vstack,setsar=1[{vout}];")
 
+    if layout == "circle" and facecam:
+        fx, fy, fw, fh = (int(v) for v in facecam)
+        if fw > 8 and fh > 8:
+            side = 300
+            base_zoom = f"{zoom_crop}{W}:{H}" if punch_zoom else ""
+            return (f"[{vin}]fps={config.OUT_FPS},split=2[{pfx}_base][{pfx}_fc];"
+                    f"[{pfx}_base]scale={W}:{H}:{scale_hd},crop={W}:{H},setsar=1{clarity}{base_zoom}[{pfx}_b];"
+                    f"[{pfx}_fc]crop={fw}:{fh}:{fx}:{fy},scale={side}:{side}:{scale_hd},crop={side}:{side},"
+                    f"format=yuva420p,geq=lum='p(X,Y)':cb='p(X,Y)':cr='p(X,Y)':"
+                    f"a='if(lte((X-{side}/2)*(X-{side}/2)+(Y-{side}/2)*(Y-{side}/2),({side}/2-2)*({side}/2-2)),255,0)'[{pfx}_p];"
+                    f"[{pfx}_b][{pfx}_p]overlay={W - side - PIP_MARGIN}:{PIP_MARGIN}[{vout}];")
     if layout == "gameplay" and facecam:
         fx, fy, fw, fh = (int(v) for v in facecam)
         if fw > 8 and fh > 8:
@@ -382,7 +406,7 @@ def _filter(layout, fg_h, facecam=None, punch_zoom=True, vin="0:v", vout="v0"):
                     f"[{pfx}_b][{pfx}_p]overlay={W - PIP_W - PIP_MARGIN}:{PIP_MARGIN}[{vout}];")
     fill = f"[{vin}]fps={config.OUT_FPS},scale={W}:{H}:{scale_hd},crop={W}:{H}{clarity}"
     zoom_str = f"{zoom_crop}{W}:{H}" if punch_zoom else ""
-    if layout == "crop" or (layout == "gameplay" and not facecam):
+    if layout == "crop" or (layout in ("gameplay", "circle") and not facecam):
         return f"{fill},setsar=1{zoom_str}[{vout}];"
     if layout == "left":
         return f"{fill}:0:0,setsar=1{zoom_str}[{vout}];"
@@ -407,6 +431,8 @@ def _hook_y(layout, hook_y, facecam=None):
     across the top would run under it: it goes just below the picture instead."""
     if layout == "stacked":
         return 220
+    if layout == "circle" and facecam and len(facecam) == 4 and facecam[2] > 8:
+        return PIP_MARGIN + 300 + 32
     if layout == "gameplay" and facecam and len(facecam) == 4 and facecam[2] > 8:
         return PIP_MARGIN + int(round(PIP_W * facecam[3] / facecam[2])) + 32
     return hook_y

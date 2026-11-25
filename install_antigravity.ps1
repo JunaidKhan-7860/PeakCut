@@ -1,9 +1,9 @@
 # PeakCut AI - Automated Antigravity One-Click Setup Script
-$Host.UI.RawUI.WindowTitle = "PeakCut AI - Antigravity Setup"
+$Host.UI.RawUI.WindowTitle = "Khan Clipping - Antigravity Setup"
 Write-Host ""
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   PEAKCUT AI - ANTIGRAVITY ONE-CLICK SETUP" -ForegroundColor Yellow
-Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
+Write-Host "   KHAN CLIPPING - ANTIGRAVITY ONE-CLICK SETUP" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
 Write-Host ""
 
 $workDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
@@ -54,11 +54,13 @@ foreach ($targetDir in $targetSkillDirs) {
     $parentDir = Split-Path $targetDir
     if (Test-Path $parentDir) {
         try {
-            if (-not (Test-Path $targetDir)) {
-                New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
-            }
+            $kcDir = Join-Path $parentDir "khan-clipping"
+            New-Item -ItemType Directory -Force -Path $targetDir, $kcDir | Out-Null
             Copy-Item -Path "$workDir\.agents\skills\peakcut\*" -Destination $targetDir -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Host "      Linked PeakCut skill into Antigravity ($targetDir)!" -ForegroundColor Green
+            if (Test-Path "$workDir\.agents\skills\khan-clipping") {
+                Copy-Item -Path "$workDir\.agents\skills\khan-clipping\*" -Destination $kcDir -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Write-Host "      Linked Khan Clipping skills into Antigravity ($parentDir)!" -ForegroundColor Green
             break
         } catch {}
     }

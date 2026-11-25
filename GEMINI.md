@@ -1,6 +1,6 @@
-# PeakCut AI — Antigravity Agent Guidelines
+# Khan Clipping AI — Antigravity Agent Guidelines
 
-Welcome to PeakCut AI! When working in this repository in Google Antigravity, follow these instructions to manage and operate the tool effortlessly for the user.
+Welcome to **Khan Clipping** (combining the best of PeakCut + NeonClipping)! When working in this repository in Google Antigravity, follow these instructions to manage and operate the studio cleanly.
 
 ---
 

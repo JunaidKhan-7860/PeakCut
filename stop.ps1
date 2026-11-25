@@ -1,8 +1,8 @@
-$Host.UI.RawUI.WindowTitle = "Stopping PeakCut..."
+$Host.UI.RawUI.WindowTitle = "Stopping Khan Clipping..."
 Write-Host ""
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   STOPPING PEAKCUT SERVICES" -ForegroundColor Yellow
-Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
+Write-Host "   STOPPING KHAN CLIPPING SERVICES" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
 Write-Host ""
 
 # Stop PeakCut Python server

@@ -1,8 +1,8 @@
-$Host.UI.RawUI.WindowTitle = "Starting PeakCut AI Studio..."
+$Host.UI.RawUI.WindowTitle = "Starting Khan Clipping AI Studio..."
 Write-Host ""
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "   PEAKCUT AI VIRAL STUDIO - AUTONOMOUS ENGINE" -ForegroundColor Yellow
-Write-Host "==========================================================" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
+Write-Host "   KHAN CLIPPING - NEON AI VIRAL STUDIO" -ForegroundColor Cyan
+Write-Host "==========================================================" -ForegroundColor Magenta
 Write-Host ""
 
 $workDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
@@ -74,12 +74,12 @@ for ($i = 0; $i -lt 30; $i++) {
 if ($ready) {
     Write-Host ""
     Write-Host "==========================================================" -ForegroundColor Green
-    Write-Host "   SUCCESS! PEAKCUT STUDIO IS RUNNING" -ForegroundColor Green
+    Write-Host "   SUCCESS! KHAN CLIPPING STUDIO IS RUNNING" -ForegroundColor Cyan
     Write-Host "==========================================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "   - Live Dashboard:      http://127.0.0.1:8765/dashboard" -ForegroundColor Cyan
-    Write-Host "   - Pro Clip Studio:     http://127.0.0.1:8765/app" -ForegroundColor Cyan
-    Write-Host "   - Local AI Brain:      Llama 3.2 (RTX 3050 Accelerated)" -ForegroundColor Cyan
+    Write-Host "   - Neon Studio Editor:  http://127.0.0.1:8765/app" -ForegroundColor Magenta
+    Write-Host "   - Local AI Brain:      Llama 3.2 + Whisper + NVENC" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Opening Live Dashboard in your browser..." -ForegroundColor Yellow
     Start-Process "http://127.0.0.1:8765/dashboard"

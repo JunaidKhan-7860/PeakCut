@@ -6,6 +6,8 @@ that a caption is never drawn in Hindi or Urdu script. Urdu is written without m
 from a list and the rest are spelled from their letters: readable, if not always how a person would type it."""
 import re
 
+from . import glossary, loanwords
+
 _VOWELS = {"अ": "a", "आ": "aa", "इ": "i", "ई": "ee", "उ": "u", "ऊ": "oo", "ऋ": "ri", "ए": "e", "ऐ": "ai",
            "ओ": "o", "औ": "au", "ऑ": "o", "ऍ": "e"}
 _SIGNS = {"ा": "aa", "ि": "i", "ी": "ee", "ु": "u", "ू": "oo", "ृ": "ri", "े": "e", "ै": "ai", "ो": "o",
@@ -87,6 +89,9 @@ def _korean(run: str) -> str:
 
 
 def _word(w: str) -> str:
+    eng = loanwords.english_for(w)
+    if eng:
+        return eng
     if w in _WORDS:
         return _WORDS[w]
     # One unit per letter: [roman consonant or vowel, its vowel or None (None = a consonant with no vowel), is_cons]
@@ -264,5 +269,6 @@ def unicodedata_nfc(s: str) -> str:
 
 
 def words(ws: list) -> list:
-    """Caption words ({'w', 's', 'e'}) with any Hindi or Urdu in Roman letters. Timings are untouched."""
-    return [dict(w, w=to_roman(w["w"])) if needs_roman(w.get("w", "")) else w for w in ws]
+    """Caption words ({'w', 's', 'e'}) with any Hindi or Urdu in Roman letters + user glossary fixes."""
+    out = [dict(w, w=to_roman(w["w"])) if needs_roman(w.get("w", "")) else w for w in ws]
+    return glossary.fix_words(out)

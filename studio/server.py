@@ -24,8 +24,8 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 
 from . import admin as admins
 from . import account, load
-from . import (accounts, ai, alerts, auth, brain, config, creators, ctx, db, jobs, live, media, music, posting,
-               profiles, render, safe, transcribe, uploader, usage)
+from . import (accounts, ai, alerts, auth, automation, brain, config, creators, ctx, db, excite, glossary, jobs,
+               learn, live, media, music, posting, profiles, render, safe, transcribe, uploader, usage)
 
 from . import tools as _tools  # noqa: E402
 
@@ -37,9 +37,9 @@ def _quiet(fn):
         print(f"  {e}", flush=True)
 
 
-app = FastAPI(title="PeakCut", docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI(title="Khan Clipping", docs_url=None, redoc_url=None, openapi_url=None)
 WEB = config.ROOT / "web"
-OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/api/staged_clips", "/api/autonomous/status", "/api/content_rewards", "/api/cleanup", "/api/cloud/", "/dashboard", "/staged")
+OPEN = ("/api/auth/", "/pub/", "/api/public", "/auth/google/", "/auth/verify", "/brand/", "/assets/", "/healthz", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/api/staged_clips", "/api/autonomous/status", "/api/content_rewards", "/api/cleanup", "/api/cloud/", "/api/readiness", "/api/glossary", "/api/ratings", "/api/automation", "/dashboard", "/staged")
 PAGES = {"/": "landing.html", "/login": "auth.html", "/signup": "auth.html", "/reset": "reset.html",
          "/privacy": "legal.html", "/terms": "legal.html", "/acceptable-use": "legal.html", "/staged": "staged.html", "/dashboard": "dashboard.html"}
 VIDEO_TYPES = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".ts", ".flv"}
@@ -75,8 +75,12 @@ def _startup():
     jobs.start()
     live.start()
     posting.start()
+    automation.start_watcher(lambda f, cfg: ctx.run_as(config.LOCAL_USER, lambda: jobs.create(
+        {"url": None, "file": str(f), "name": f.stem},
+        {"max_clips": int(cfg.get("watch_count") or 4), "mode": cfg.get("watch_mode") or "fast"}
+    )))
     from . import updates
-    updates.start()                  # looks for a newer PeakCut every minute, in the background
+    updates.start()                  # looks for a newer Khan Clipping every minute, in the background
 
 
 # ================================================================ the gate: who is asking, and are they allowed
@@ -2125,8 +2129,111 @@ def api_cleanup(max_age_hours: float = 2.0):
     }
 
 
+@app.get("/api/readiness")
+def api_readiness():
+    """System Check chips: FFmpeg, Encoder (NVENC/x264), yt-dlp, AI Brain, and Free Disk Space."""
+    import subprocess
+    ffmpeg_ok = bool(shutil.which("ffmpeg"))
+    encoder = "cpu (x264)"
+    if ffmpeg_ok:
+        try:
+            res = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"], capture_output=True, text=True, timeout=4)
+            if "h264_nvenc" in (res.stdout or ""):
+                encoder = "NVENC GPU"
+        except Exception:
+            pass
+    try:
+        import yt_dlp  # noqa: F401
+        yt_ok = True
+    except Exception:
+        yt_ok = bool(shutil.which("yt-dlp"))
+    ai_ok = False
+    ai_label = "Offline"
+    try:
+        ms = ai.models()
+        if ms:
+            ai_ok = True
+            ai_label = str(ms[0])
+    except Exception:
+        pass
+    disk_gb = 0.0
+    try:
+        disk_gb = round(shutil.disk_usage(str(config.DATA_DIR)).free / (1024 ** 3), 1)
+    except Exception:
+        pass
+    return {
+        "brand": "Khan Clipping",
+        "ffmpeg": {"ok": ffmpeg_ok, "label": "FFmpeg Ready" if ffmpeg_ok else "FFmpeg Missing"},
+        "encoder": {"ok": True, "label": encoder},
+        "ytdl": {"ok": yt_ok, "label": "yt-dlp Ready" if yt_ok else "yt-dlp Missing"},
+        "ai": {"ok": ai_ok, "label": ai_label},
+        "disk": {"ok": disk_gb >= 5.0, "free_gb": disk_gb, "label": f"{disk_gb} GB free"},
+        "safe_staging": True,
+    }
+
+
+@app.get("/api/glossary")
+def api_glossary_get():
+    return {"entries": glossary.entries(), "max": glossary.MAX_ENTRIES}
+
+
+@app.post("/api/glossary")
+def api_glossary_add(body: dict = Body(...)):
+    try:
+        rows = glossary.add(str(body.get("from") or ""), str(body.get("to") or ""))
+        return {"ok": True, "entries": rows}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.delete("/api/glossary")
+def api_glossary_del(wrong: str = ""):
+    rows = glossary.remove(wrong)
+    return {"ok": True, "entries": rows}
+
+
+@app.get("/api/ratings")
+def api_ratings_get():
+    return learn.summary()
+
+
+@app.post("/api/ratings")
+def api_ratings_post(body: dict = Body(...)):
+    try:
+        res = learn.record(
+            str(body.get("clip_id") or ""),
+            int(body.get("rating") or 0),
+            body.get("features") if isinstance(body.get("features"), dict) else None,
+            {"title": body.get("title")} if body.get("title") else None,
+        )
+        return {"ok": True, **res}
+    except (ValueError, TypeError) as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/automation")
+def api_automation_get():
+    return automation.read()
+
+
+@app.put("/api/automation")
+def api_automation_put(body: dict = Body(...)):
+    try:
+        return {"ok": True, **automation.save(body)}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/automation/lint")
+def api_automation_lint(body: dict = Body(...)):
+    texts = body.get("texts") or []
+    if not isinstance(texts, list):
+        texts = [str(texts)]
+    return {"flagged": automation.lint(texts)}
+
+
 def main():
-    print(f"\n  PeakCut is running:  {config.PUBLIC_URL}\n")
+    print(f"\n  Khan Clipping is running:  {config.PUBLIC_URL}\n")
     if not config.ACCOUNTS and (config.HTTPS or config.HOST not in ("127.0.0.1", "localhost", "::1")):
         print("  Sign-in is off, so anyone who can reach this address can use PeakCut and its AI key.\n"
               "  On a server other people can reach, set PEAKCUT_ACCOUNTS=1 in .env.\n", flush=True)

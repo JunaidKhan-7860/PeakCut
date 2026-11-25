@@ -3,30 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PeakCut Studio — Autonomous Viral Control Center</title>
+  <title>Khan Clipping Studio — Autonomous Viral Control Center</title>
+  <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #080b13;
-      --bg-radial: radial-gradient(circle at 50% 0%, #151d32 0%, #080b13 75%);
-      --panel: #0e1322;
-      --card: #131a2e;
-      --card-hover: #19223c;
-      --border: rgba(255, 255, 255, 0.08);
-      --border-bright: rgba(255, 255, 255, 0.16);
-      --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.25);
-      --cyan: #06b6d4;
-      --purple: #8b5cf6;
-      --amber: #f59e0b;
-      --amber-glow: rgba(245, 158, 11, 0.25);
+      --bg: #0b0912;
+      --bg-radial: radial-gradient(circle at 80% 0%, #3b0f6e 0%, #1a0b28 32%, #0b0912 72%);
+      --panel: #171320;
+      --card: #1d1728;
+      --card-hover: #261d36;
+      --border: #30263e;
+      --border-bright: #5c2f50;
+      --accent: #ff4ba5;
+      --accent-glow: rgba(255, 75, 165, 0.3);
+      --cyan: #58e8f7;
+      --lime: #d4fb58;
+      --purple: #9d5cff;
+      --amber: #ff8a3d;
+      --amber-glow: rgba(255, 138, 61, 0.25);
       --yt: #ef4444;
-      --ig: #ec4899;
-      --text: #f3f5fa;
-      --muted: #94a3b8;
-      --dim: #64748b;
+      --ig: #ff4ba5;
+      --text: #fbf6ff;
+      --muted: #bdaeca;
+      --dim: #7d6d8a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -57,14 +59,15 @@
       gap: 16px;
     }
     .logo-badge {
-      background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-      color: #041018;
+      background: linear-gradient(135deg, #ff4ba5 0%, #ff8a3d 55%, #58e8f7 100%);
+      color: #14050e;
+      font-family: 'Barlow Condensed', 'Space Grotesk', sans-serif;
       font-weight: 800;
-      font-size: 17px;
-      padding: 8px 14px;
+      font-size: 20px;
+      padding: 7px 15px;
       border-radius: 10px;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(255, 75, 165, 0.38);
     }
     .brand-title {
       font-size: 22px;
@@ -123,15 +126,26 @@
       transform: translateY(-1px);
     }
     .btn.primary {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: #fff;
-      border-color: #10b981;
-      font-weight: 700;
-      box-shadow: 0 2px 10px rgba(16,185,129,0.3);
+      background: linear-gradient(135deg, #ff4ba5 0%, #ff8a3d 100%);
+      color: #14050e;
+      border-color: #ff4ba5;
+      font-weight: 800;
+      box-shadow: 0 4px 16px rgba(255,75,165,0.35);
     }
     .btn.primary:hover {
-      box-shadow: 0 4px 18px rgba(16,185,129,0.45);
+      box-shadow: 0 6px 24px rgba(255,75,165,0.55);
     }
+    .kc-readiness {
+      display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:18px;padding:10px 16px;
+      border-radius:12px;background:#130e1c;border:1px solid var(--border);font-size:12px;color:var(--muted);
+    }
+    .kc-readiness .rd { display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;background:#1c1528;border:1px solid var(--border); }
+    .kc-readiness .rd.ok b { color:var(--lime); }
+    .kc-readiness .rd.cyan b { color:var(--cyan); }
+    .kc-readiness .rd.bad b { color:#ff6b8b; }
+    .kc-stars { display:flex;gap:3px;align-items:center;margin:4px 0 8px; }
+    .kc-stars button { background:none;border:0;color:#4a3b5e;font-size:18px;cursor:pointer;padding:0 2px;line-height:1; }
+    .kc-stars button.on,.kc-stars button:hover { color:#ffd45a; }
 
     /* SAFE POSTING FREEZE BANNER */
     .safe-mode-banner {
@@ -806,20 +820,20 @@
   <!-- Top Header -->
   <header>
     <div class="brand-wrap">
-      <div class="logo-badge">PEAKCUT AI</div>
+      <div class="logo-badge">⚡ KHAN CLIPPING</div>
       <div>
         <div class="brand-title">
-          Autonomous Viral Studio
+          Khan Clipping — Autonomous Neon Studio
           <div class="pulse-dot" title="Autonomous 24/7 AI Engine Running"></div>
         </div>
-        <div class="brand-subtitle">Indian Campaign & GTA 6 Virality • 1080x1920 60FPS NVENC</div>
+        <div class="brand-subtitle">NeonClipping Engine + 12-Director Syndicate • 1080x1920 60FPS NVENC</div>
       </div>
     </div>
     <div class="top-nav-actions">
-      <button class="btn" id="cloudSyncBtn" onclick="triggerCloudSync(this)" style="border-color: rgba(56,189,248,0.5); color: #38bdf8; background: rgba(56,189,248,0.1); font-weight: 700;">
+      <button class="btn" id="cloudSyncBtn" onclick="triggerCloudSync(this)" style="border-color: rgba(88,232,247,0.45); color: #58e8f7; background: rgba(88,232,247,0.1); font-weight: 700;">
         ☁️ Offload to Cloud CDN
       </button>
-      <button class="btn" id="cleanDiskBtn" onclick="triggerCleanup(this)" style="border-color: rgba(16,185,129,0.5); color: #10b981; background: rgba(16,185,129,0.1); font-weight: 700;">
+      <button class="btn" id="cleanDiskBtn" onclick="triggerCleanup(this)" style="border-color: rgba(212,251,88,0.45); color: #d4fb58; background: rgba(212,251,88,0.1); font-weight: 700;">
         🧹 Clean Temp Disk
       </button>
       <button class="btn" onclick="refreshAllData()">🔄 Refresh</button>
@@ -827,11 +841,12 @@
       <a href="https://studio.youtube.com/channel/UCOnjYjv4eqnOF3tEk6GUw9Q" target="_blank" class="btn" style="border-color: rgba(239,68,68,0.4)">
         📺 YouTube Studio
       </a>
-      <a href="https://www.instagram.com/gamingclipkhan/" target="_blank" class="btn" style="border-color: rgba(236,72,153,0.4)">
+      <a href="https://www.instagram.com/gamingclipkhan/" target="_blank" class="btn" style="border-color: rgba(255,75,165,0.45)">
         📸 Instagram
       </a>
     </div>
   </header>
+  <div id="readinessBar" class="kc-readiness" style="display:none"></div>
 
   <!-- SAFE CLIPPING ACTIVE BANNER -->
   <div class="safe-mode-banner" id="safeModeBanner">
@@ -971,7 +986,7 @@
   <div id="rolesTab" class="tab-pane">
     <div class="rewards-hero" style="background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.05)); border-color: rgba(16,185,129,0.3)">
       <div class="rewards-title">
-        <h2>PeakCut Media Agency — Autonomous Production Syndicate</h2>
+        <h2>Khan Clipping Agency — Autonomous Production Syndicate</h2>
         <p>Elite 12-Director Autonomous Studio: Strategic planning, algorithm optimization, trend scouting, Indian & global audience expansion, and broadcast-standard finishing.</p>
       </div>
       <div class="portal-badges">
@@ -1442,6 +1457,10 @@
                 <span>${creator}</span>
               </div>
               <div class="clip-title" title="${title}">${title}</div>
+              <div class="kc-stars" title="Rate this clip 1-5 stars to personalise highlight ranking">
+                ${[1,2,3,4,5].map(st => `<button type="button" class="${(window.clipRatings?.[clipId] || 0) >= st ? 'on' : ''}" onclick="rateDashClip('${clipId}', ${st}, this)">★</button>`).join('')}
+                <span style="font-size:11px;color:var(--dim);margin-left:6px">Rate clip</span>
+              </div>
               <div class="schedule-info">
                 <span>🛡️</span>
                 <span>Staged Safely · Auto-Posting Frozen</span>
@@ -1556,7 +1575,41 @@
       }
     }
 
+    async function loadReadiness() {
+      const bar = document.getElementById('readinessBar');
+      if (!bar) return;
+      try {
+        const [rd, rt] = await Promise.all([
+          fetch('/api/readiness').then(r => r.json()),
+          fetch('/api/ratings').then(r => r.json()).catch(() => ({}))
+        ]);
+        window.clipRatings = rt.by_clip || {};
+        bar.style.display = 'flex';
+        bar.innerHTML = `<span style="font-weight:700;color:var(--accent);letter-spacing:.6px">SYSTEM CHECK</span>`
+          + `<span class="rd ${rd.ffmpeg?.ok ? 'ok' : 'bad'}">● <b>${rd.ffmpeg?.label || 'FFmpeg'}</b></span>`
+          + `<span class="rd cyan">⚡ <b>${rd.encoder?.label || 'Encoder'}</b></span>`
+          + `<span class="rd ${rd.ytdl?.ok ? 'ok' : 'bad'}">▶ <b>${rd.ytdl?.label || 'yt-dlp'}</b></span>`
+          + `<span class="rd cyan">🧠 AI: <b>${rd.ai?.label || 'Offline'}</b></span>`
+          + `<span class="rd ${rd.disk?.ok ? 'ok' : 'bad'}">💾 <b>${rd.disk?.label || 'Disk'}</b></span>`
+          + `<span class="rd ok" style="margin-left:auto">★ Ranker: <b>${rt.ratings || 0}/${rt.min_ratings || 8} rated</b></span>`;
+      } catch (e) {}
+    }
+
+    async function rateDashClip(clipId, star, btn) {
+      try {
+        const res = await fetch('/api/ratings', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({clip_id: clipId, rating: star})
+        }).then(r => r.json());
+        if (res.by_clip) window.clipRatings = res.by_clip;
+        btn.parentElement.querySelectorAll('button').forEach((b, idx) => b.classList.toggle('on', idx + 1 <= star));
+        showToast(`Rated ${star}★ — ${res.message || 'saved locally!'}`);
+      } catch (e) {}
+    }
+
     function refreshAllData() {
+      loadReadiness();
       fetchStatus();
       loadClips();
       loadContentRewards();
@@ -1569,6 +1622,7 @@
     }, 4000);
 
     // Initial load
+    loadReadiness();
     fetchStatus();
     loadClips();
     loadContentRewards();
